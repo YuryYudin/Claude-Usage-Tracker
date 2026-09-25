@@ -109,7 +109,7 @@ struct UpdatesSettingsView: View {
                             Toggle("", isOn: $autoUpdateEnabled)
                                 .labelsHidden()
                                 .disabled(!UpdateManager.updatesAvailable)
-                                .onChange(of: autoUpdateEnabled) { _, newValue in
+                                .onChangeCompat(of: autoUpdateEnabled) { newValue in
                                     updateManager.setAutomaticChecksEnabled(newValue)
                                 }
                         }

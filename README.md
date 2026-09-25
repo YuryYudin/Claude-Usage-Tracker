@@ -104,7 +104,7 @@ Claude Usage Tracker is a native macOS menu bar application for monitoring Claud
 
 Before installing Claude Usage Tracker, ensure you have:
 
-- **macOS 14.0 (Sonoma) or later** - Check: Apple menu → About This Mac
+- **macOS 13.0 (Ventura) or later** (desktop widgets need macOS 14) - Check: Apple menu → About This Mac
 - **An account with a supported provider**: Claude, OpenAI Codex, Z.ai GLM or Kimi Code
 
 **Authentication** (choose one method):
@@ -692,7 +692,7 @@ Sonnet │ Ctx: 96K │ Usage: 25%
 
 - **Language**: Swift 5.0+
 - **UI Framework**: SwiftUI 5.0+
-- **Platform**: macOS 14.0+ (Sonoma)
+- **Platform**: macOS 13.0+ (Ventura)
 - **Architecture**: MVVM with Protocol-Oriented Design
 - **Storage**: UserDefaults with App Groups
 - **Networking**: URLSession with async/await
@@ -829,7 +829,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 - Built with Swift and SwiftUI
-- Designed for macOS Sonoma and later
+- Designed for macOS Ventura and later
 - Uses Claude AI's usage API
 - Inspired by the need for better usage visibility
 
