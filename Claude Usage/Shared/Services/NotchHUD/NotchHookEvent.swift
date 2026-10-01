@@ -22,7 +22,7 @@ enum NotchHookEvent: Equatable {
     case preToolUse(id: String, cwd: String?, status: SessionStatus, task: String)
     case postToolUse(id: String, cwd: String?)
     case toolFailure(id: String, cwd: String?)
-    case stop(id: String, cwd: String?)
+    case stop(id: String, cwd: String? = nil)
     case notification(id: String, cwd: String?, message: String?)
 
     /// The hook URL path suffix each event is received on (after the token segment).
