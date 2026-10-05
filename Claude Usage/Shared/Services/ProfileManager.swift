@@ -283,7 +283,7 @@ class ProfileManager: ObservableObject {
                 // Reload so applyProfileCredentials picks up the refreshed token.
                 profiles = profileStore.loadProfiles()
             } else if cliSyncService.extractRefreshToken(from: snapshot) != nil {
-                // Local patch for #331: the refresh failed (typically invalid_grant: the saved
+                // #331: the refresh failed (typically invalid_grant: the saved
                 // refresh token was consumed or has expired), so the snapshot is dead. Writing it
                 // would replace the live login every running Claude Code session shares and log
                 // them all out, so the keychain is left alone.
@@ -303,8 +303,8 @@ class ProfileManager: ObservableObject {
                     isSwitchingProfile = false
                     ErrorPresenter.shared.showAlert(for: AppError(
                         code: .providerAuthRefreshFailed,
-                        message: "\(updatedProfile.name)'s saved Claude Code login has expired",
-                        recoverySuggestion: "The switch was cancelled and your current login was left as it is, so running Claude Code sessions keep working. To re-link \(updatedProfile.name), run /login in Claude Code with that account, then switch to \(updatedProfile.name) again."
+                        message: String(format: "error.cli_login_expired".localized, updatedProfile.name),
+                        recoverySuggestion: String(format: "error.cli_login_expired_suggestion".localized, updatedProfile.name, updatedProfile.name)
                     ))
                     return
                 }
