@@ -268,30 +268,59 @@ class ProfileManager: ObservableObject {
         LoggingService.shared.log("Checking CLI credentials for profile '\(updatedProfile.name)': hasJSON=\(updatedProfile.cliCredentialsJSON != nil)")
 
         if updatedProfile.provider.descriptor.capabilities.cliAccountSync,
-           updatedProfile.cliCredentialsJSON != nil {
+           let snapshot = updatedProfile.cliCredentialsJSON {
             // Refresh the OAuth token before applying. Stored tokens expire (~8h),
             // so applying a stale snapshot would write a dead access token to the
             // keychain and Claude Code would 401 ("Please run /login"). This refreshes
             // via the refresh_token grant and persists the rotated tokens back to the
             // profile, so applyProfileCredentials below writes a valid token.
             var refreshedJSON: String?
+            var applySnapshot = true
             if let refreshed = await cliSyncService.ensureFreshCredentials(for: updatedProfile.id, allowRotation: true) {
                 refreshedJSON = refreshed
                 LoggingService.shared.log("✓ Ensured fresh credentials before apply for: \(updatedProfile.name)")
                 _ = refreshed
                 // Reload so applyProfileCredentials picks up the refreshed token.
                 profiles = profileStore.loadProfiles()
+            } else if cliSyncService.extractRefreshToken(from: snapshot) != nil {
+                // Local patch for #331: the refresh failed (typically invalid_grant: the saved
+                // refresh token was consumed or has expired), so the snapshot is dead. Writing it
+                // would replace the live login every running Claude Code session shares and log
+                // them all out, so the keychain is left alone.
+                if cliSyncService.systemHoldsAccount(of: updatedProfile) {
+                    // The live login already is this account (the user ran /login with it): adopt it.
+                    do {
+                        try cliSyncService.syncToProfile(updatedProfile.id)
+                        profiles = profileStore.loadProfiles()
+                        LoggingService.shared.log("✓ Adopted the live CLI login for '\(updatedProfile.name)' in place of its dead snapshot")
+                    } catch {
+                        LoggingService.shared.logError("Failed to adopt the live CLI login (non-fatal)", error: error)
+                    }
+                    applySnapshot = false
+                } else {
+                    LoggingService.shared.logError("Switch to '\(updatedProfile.name)' cancelled: its saved CLI login could not be refreshed, and the live login was left untouched")
+                    switchingSemaphore = false
+                    isSwitchingProfile = false
+                    ErrorPresenter.shared.showAlert(for: AppError(
+                        code: .providerAuthRefreshFailed,
+                        message: "\(updatedProfile.name)'s saved Claude Code login has expired",
+                        recoverySuggestion: "The switch was cancelled and your current login was left as it is, so running Claude Code sessions keep working. To re-link \(updatedProfile.name), run /login in Claude Code with that account, then switch to \(updatedProfile.name) again."
+                    ))
+                    return
+                }
             }
-            guard let current = profiles.first(where: { $0.id == id }),
-                  current.provider == updatedProfile.provider,
-                  current.customKeychainServiceName == updatedProfile.customKeychainServiceName,
-                  current.oauthAccountJSON == updatedProfile.oauthAccountJSON,
-                  current.cliCredentialsJSON == updatedProfile.cliCredentialsJSON || current.cliCredentialsJSON == refreshedJSON else { return }
-            do {
-                try cliSyncService.applyProfileCredentials(updatedProfile.id)
-                LoggingService.shared.log("✓ Applied CLI credentials for: \(updatedProfile.name)")
-            } catch {
-                LoggingService.shared.logError("Failed to apply CLI credentials (non-fatal)", error: error)
+            if applySnapshot {
+                guard let current = profiles.first(where: { $0.id == id }),
+                      current.provider == updatedProfile.provider,
+                      current.customKeychainServiceName == updatedProfile.customKeychainServiceName,
+                      current.oauthAccountJSON == updatedProfile.oauthAccountJSON,
+                      current.cliCredentialsJSON == updatedProfile.cliCredentialsJSON || current.cliCredentialsJSON == refreshedJSON else { return }
+                do {
+                    try cliSyncService.applyProfileCredentials(updatedProfile.id)
+                    LoggingService.shared.log("✓ Applied CLI credentials for: \(updatedProfile.name)")
+                } catch {
+                    LoggingService.shared.logError("Failed to apply CLI credentials (non-fatal)", error: error)
+                }
             }
         } else {
             LoggingService.shared.log("⚠️ Profile '\(updatedProfile.name)' has no CLI credentials JSON")

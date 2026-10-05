@@ -714,6 +714,16 @@ class ClaudeCodeSyncService {
         return nil
     }
 
+    /// Whether Claude Code's live login (`.claude.json` `oauthAccount`) is the same account as
+    /// `profile`. False when either side has no account identity.
+    func systemHoldsAccount(of profile: Profile) -> Bool {
+        guard let system = accountIdentity(fromOAuthAccountJSON: readOAuthAccount()),
+              let stored = accountIdentity(fromOAuthAccountJSON: profile.oauthAccountJSON) else {
+            return false
+        }
+        return system == stored
+    }
+
     /// Writes an `oauthAccount` object (serialized JSON string) back into
     /// Claude Code's `.claude.json` config file, replacing whatever was there.
     /// Preserves all other top-level keys in the file. Does nothing if no
