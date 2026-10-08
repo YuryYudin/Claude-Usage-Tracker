@@ -122,6 +122,23 @@ A named Codex bucket's secondary window comes from that same bucket; GLM's month
 tool quota is labelled as tools. Missing quotas are excluded rather than presented
 as zero usage, and missing reset times remain absent.
 
+The overview now declares medium, large, and extra-large families. Apple's
+[current family documentation](https://developer.apple.com/documentation/widgetkit/widgetfamily/systemextralarge)
+and the installed macOS SDK expose `systemExtraLarge` from macOS 14. The extra-large
+layout uses two columns of three accounts, retaining both quota bars, reset times,
+and stale indicators. The large layout switches to compact aligned rows above
+three accounts so four to six accounts fit vertically. Medium displays up to four
+accounts; large and extra-large display up to six. These remain system-defined
+widget sizes, selected through the widget's size menu.
+
+Standalone SwiftUI renders of six synthetic accounts at 300 × 300 and 630 × 300
+points were inspected in light and dark mode, including a stale account and a
+single-quota account. The harness injected the host's read-only family into a
+temporary source copy and omitted the host-only container background. The renders
+validate the content layout, not actual widget-host sizing or macOS greying. They
+are under `/tmp/claude-usage-widget-size-preview/`. A subsequent universal Release
+build passed; its log is `/tmp/claude-usage-widget-sizes-release.log`.
+
 Meaningful label changes and a stale profile becoming fresh trigger reloads even
 when percentages stay flat. Empty credential sets clear the snapshot. The shared
 file uses the existing read-only sandbox exception without App Groups.

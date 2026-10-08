@@ -273,7 +273,7 @@ struct SessionUsageWidget: Widget {
     }
 }
 
-// MARK: - Medium/large widget: all display-selected profiles
+// MARK: - Overview widget: display-selected profiles
 
 struct UsageOverviewWidgetView: View {
     @Environment(\.widgetFamily) private var family
@@ -282,7 +282,7 @@ struct UsageOverviewWidgetView: View {
 
     private var profiles: [WidgetSnapshot.ProfileEntry] {
         let selected = (entry.snapshot?.profiles ?? []).filter(\.isDisplayed)
-        return Array(selected.prefix(family == .systemLarge ? 6 : 4))
+        return Array(selected.prefix(family == .systemMedium ? 4 : 6))
     }
 
     var body: some View {
@@ -292,9 +292,13 @@ struct UsageOverviewWidgetView: View {
             Group {
                 if profiles.isEmpty {
                     NoDataView(palette: palette)
-                } else if family == .systemLarge {
+                } else if family == .systemExtraLarge {
+                    extraLargeLayout(palette)
+                } else if family == .systemLarge && profiles.count <= 3 {
                     largeLayout(palette)
                 } else {
+                    // Four to six detailed cards exceed a large widget's height.
+                    // Keep every account visible by aligning compact quota columns.
                     mediumLayout(palette)
                 }
             }
@@ -316,54 +320,78 @@ struct UsageOverviewWidgetView: View {
                         .fill(palette.separator)
                         .frame(height: 1)
                 }
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 4) {
-                        Text(profile.name)
-                            .font(.subheadline.bold())
-                            .lineLimit(1)
-                            .foregroundStyle(palette.primary)
-                        if profile.isActive {
-                            Image(systemName: providerIcon(profile.provider))
-                                .font(.caption2)
-                                .foregroundStyle(palette.secondary)
-                        }
-                        Spacer(minLength: 0)
-                        if entry.isProfileStale(profile) {
-                            StaleBadge(lastUpdated: profile.lastUpdated, palette: palette)
-                        }
-                    }
-                    HStack(alignment: .top, spacing: 16) {
-                        UsageBar(
-                            label: LocalizedStringKey(profile.primaryLabel ?? "widget.session"),
-                            percentage: profile.sessionPercentage,
-                            resetTime: profile.sessionResetTime,
-                            now: entry.date,
-                            palette: palette,
-                            compact: false
-                        )
-                        if let weeklyPercentage = profile.weeklyPercentage {
-                            UsageBar(
-                                label: LocalizedStringKey(profile.secondaryLabel ?? "widget.weekly"),
-                                percentage: weeklyPercentage,
-                                resetTime: profile.weeklyResetTime,
-                                now: entry.date,
-                                palette: palette,
-                                compact: false
-                            )
-                        }
-                    }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                // Per-row: a profile can go stale on its own — the
-                // single-profile refresh path only updates the
-                // active profile.
-                .staleDimmed(entry.isProfileStale(profile), isDark: colorScheme == .dark)
+                detailedProfile(profile, palette: palette)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    /// Medium: one compact line per profile, name in a fixed column so the
+    /// Extra-large: two equal columns and up to three rows. This gives six
+    /// accounts room for names, both quota bars, resets, and stale indicators.
+    private func extraLargeLayout(_ palette: Palette) -> some View {
+        VStack(spacing: 8) {
+            ForEach(0..<((profiles.count + 1) / 2), id: \.self) { row in
+                if row > 0 {
+                    Rectangle().fill(palette.separator).frame(height: 1)
+                }
+                HStack(alignment: .top, spacing: 18) {
+                    ForEach(Array(profiles.dropFirst(row * 2).prefix(2))) { profile in
+                        detailedProfile(profile, palette: palette)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    }
+                    if row * 2 + 1 == profiles.count {
+                        Color.clear.frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
+                }
+                .frame(maxHeight: .infinity)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func detailedProfile(_ profile: WidgetSnapshot.ProfileEntry, palette: Palette) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 4) {
+                Text(profile.name)
+                    .font(.subheadline.bold())
+                    .lineLimit(1)
+                    .foregroundStyle(palette.primary)
+                if profile.isActive {
+                    Image(systemName: providerIcon(profile.provider))
+                        .font(.caption2)
+                        .foregroundStyle(palette.secondary)
+                }
+                Spacer(minLength: 0)
+                if entry.isProfileStale(profile) {
+                    StaleBadge(lastUpdated: profile.lastUpdated, palette: palette)
+                }
+            }
+            HStack(alignment: .top, spacing: 16) {
+                UsageBar(
+                    label: LocalizedStringKey(profile.primaryLabel ?? "widget.session"),
+                    percentage: profile.sessionPercentage,
+                    resetTime: profile.sessionResetTime,
+                    now: entry.date,
+                    palette: palette,
+                    compact: false
+                )
+                if let weeklyPercentage = profile.weeklyPercentage {
+                    UsageBar(
+                        label: LocalizedStringKey(profile.secondaryLabel ?? "widget.weekly"),
+                        percentage: weeklyPercentage,
+                        resetTime: profile.weeklyResetTime,
+                        now: entry.date,
+                        palette: palette,
+                        compact: false
+                    )
+                }
+            }
+        }
+        .staleDimmed(entry.isProfileStale(profile), isDark: colorScheme == .dark)
+    }
+
+    /// Medium and dense large: one compact line per profile, name in a fixed column so the
     /// bars align across rows. Rows share the vertical space equally.
     private func mediumLayout(_ palette: Palette) -> some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -411,7 +439,7 @@ struct UsageOverviewWidget: Widget {
         }
         .configurationDisplayName(String(localized: "widget.overview.name"))
         .description(String(localized: "widget.overview.desc"))
-        .supportedFamilies([.systemMedium, .systemLarge])
+        .supportedFamilies([.systemMedium, .systemLarge, .systemExtraLarge])
         .contentMarginsDisabled()
     }
 }
