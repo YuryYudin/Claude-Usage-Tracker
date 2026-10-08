@@ -8,4 +8,10 @@ enum CredentialRefreshGuard {
             && current.oauthAccountJSON == expected.oauthAccountJSON
             && (current.cliCredentialsJSON == expected.cliCredentialsJSON || current.cliCredentialsJSON == replacement)
     }
+    static func canUpdateCodex(_ current: CodexCredentials, expected: CodexCredentials,
+                               replacement: CodexCredentials) -> Bool {
+        current.resolvedAccountId == expected.resolvedAccountId
+            && (current.refreshToken == expected.refreshToken || current.refreshToken == replacement.refreshToken)
+    }
+
 }

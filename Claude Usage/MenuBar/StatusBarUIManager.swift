@@ -378,16 +378,8 @@ final class StatusBarUIManager {
                 showRemaining: showRemaining
             )
 
-            let sessionElapsed = UsageStatusCalculator.elapsedFraction(
-                resetTime: usage.sessionResetTime,
-                duration: Constants.sessionWindow,
-                showRemaining: false
-            )
-            let weekElapsed = UsageStatusCalculator.elapsedFraction(
-                resetTime: usage.weeklyResetTime,
-                duration: Constants.weeklyWindow,
-                showRemaining: false
-            )
+            let sessionElapsed = usage.primaryElapsedFraction()
+            let weekElapsed = usage.weeklyElapsedFraction()
             let sessionStatus = UsageStatusCalculator.calculateStatus(
                 usedPercentage: sessionUsed,
                 showRemaining: showRemaining,

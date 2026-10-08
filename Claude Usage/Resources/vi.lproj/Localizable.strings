@@ -1189,3 +1189,5 @@
 "profiles.storage_error.title" = "Accounts could not be loaded safely";
 "profiles.storage_error.description" = "Your original account data has been preserved. Check the storage error and migration backup before continuing.";
 "settings.updates.integration_disabled" = "Updates are paused for this build to protect Codex connections and GLM accounts. A compatible update channel is required before updates can resume.";
+
+"usage.no_snapshot" = "No usage snapshot is available yet.";

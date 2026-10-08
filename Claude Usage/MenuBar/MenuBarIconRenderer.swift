@@ -25,6 +25,7 @@ final class MenuBarIconRenderer {
         showIconName: Bool,
         showNextSessionTime: Bool
     ) -> NSImage {
+        let showNextResetTime = showNextSessionTime && usage.hasPrimaryReset
         // Get the metric value and percentage
         let metricData = getMetricData(
             metricType: metricType,
@@ -83,7 +84,7 @@ final class MenuBarIconRenderer {
                 colorMode: colorMode,
                 singleColorHex: singleColorHex,
                 showIconName: showIconName,
-                showNextSessionTime: showNextSessionTime,
+                showNextSessionTime: showNextResetTime,
                 usage: usage,
                 timeMarkerFraction: timeMarkerFraction,
                 paceStatus: paceStatus,
@@ -97,7 +98,7 @@ final class MenuBarIconRenderer {
                 colorMode: colorMode,
                 singleColorHex: singleColorHex,
                 showIconName: showIconName,
-                showNextSessionTime: showNextSessionTime,
+                showNextSessionTime: showNextResetTime,
                 usage: usage,
                 timeMarkerFraction: timeMarkerFraction,
                 paceStatus: paceStatus,
@@ -165,11 +166,7 @@ final class MenuBarIconRenderer {
                 showRemaining: showRemaining
             )
             let sessionElapsed: Double? = usePaceColoring
-                ? UsageStatusCalculator.elapsedFraction(
-                    resetTime: usage.sessionResetTime,
-                    duration: Constants.sessionWindow,
-                    showRemaining: false
-                )
+                ? usage.primaryElapsedFraction()
                 : nil
             let statusLevel = UsageStatusCalculator.calculateStatus(
                 usedPercentage: usedPercentage,
@@ -191,11 +188,7 @@ final class MenuBarIconRenderer {
                 showRemaining: showRemaining
             )
             let weekElapsed: Double? = usePaceColoring
-                ? UsageStatusCalculator.elapsedFraction(
-                    resetTime: usage.weeklyResetTime,
-                    duration: Constants.weeklyWindow,
-                    showRemaining: false
-                )
+                ? usage.weeklyElapsedFraction()
                 : nil
             let statusLevel = UsageStatusCalculator.calculateStatus(
                 usedPercentage: usedPercentage,
@@ -1397,26 +1390,13 @@ final class MenuBarIconRenderer {
         usage: ClaudeUsage,
         showRemaining: Bool
     ) -> CGFloat? {
-        let resetTime: Date?
-        let duration: TimeInterval
-
+        let fraction: Double?
         switch metricType {
-        case .session, .codex, .zai:
-            resetTime = usage.sessionResetTime
-            duration = Constants.sessionWindow
-        case .week:
-            resetTime = usage.weeklyResetTime
-            duration = Constants.weeklyWindow
-        case .api:
-            return nil
+        case .session, .codex, .zai: fraction = usage.primaryElapsedFraction(showRemaining: showRemaining)
+        case .week: fraction = usage.weeklyElapsedFraction(showRemaining: showRemaining)
+        case .api: return nil
         }
-
-        guard let f = UsageStatusCalculator.elapsedFraction(
-            resetTime: resetTime,
-            duration: duration,
-            showRemaining: showRemaining
-        ) else { return nil }
-        return CGFloat(f)
+        return fraction.map { CGFloat($0) }
     }
 
     /// Formats token count intelligently (e.g., 1M instead of 1000K)

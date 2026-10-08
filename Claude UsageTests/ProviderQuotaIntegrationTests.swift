@@ -112,4 +112,30 @@ final class ProviderQuotaIntegrationTests: XCTestCase {
         XCTAssertEqual(Constants.NotchHUD.port, 29847)
         XCTAssertFalse(UpdateManager.updatesAvailable)
     }
+    func testSelectedWeeklyQuotaUsesWeeklyPaceAndMissingTimingHidesMarkers() throws {
+        var usage = zaiSnapshot().sharedUsage(configuration: .init(selectedLimitID: "CREDIT_LIMIT-6"))
+        let reset = Date().addingTimeInterval(3.5 * 24 * 60 * 60)
+        usage.quotaWindows?[1].resetTime = reset
+        let fraction = try XCTUnwrap(usage.trayUsage.primaryElapsedFraction())
+        XCTAssertEqual(fraction, 0.5, accuracy: 0.001)
+        XCTAssertTrue(usage.hasPrimaryReset)
+        usage.selectedQuotaID = "TIME_LIMIT-5"
+        XCTAssertNil(usage.trayUsage.primaryElapsedFraction())
+        XCTAssertFalse(usage.hasPrimaryReset)
+        usage.quotaWindows?[2].resetTime = reset
+        XCTAssertNil(usage.trayUsage.primaryElapsedFraction(), "An unknown monthly duration must not become a five-hour window")
+        XCTAssertTrue(usage.hasPrimaryReset)
+    }
+
+    func testAccountWithoutCacheNeverDisplaysAPlaceholderQuota() {
+        let profile = Profile(name: "No cache", provider: .zai, zaiAPIKey: "synthetic")
+        XCTAssertEqual(profile.usageForDisplay.sessionAvailable, false)
+        XCTAssertEqual(profile.usageForDisplay.weeklyAvailable, false)
+        var other = profile
+        var fetched = ClaudeUsage.empty; fetched.sessionPercentage = 67
+        other.claudeUsage = fetched
+        XCTAssertEqual(other.usageForDisplay.sessionPercentage, 67)
+        XCTAssertEqual(profile.usageForDisplay.sessionAvailable, false)
+    }
+
 }

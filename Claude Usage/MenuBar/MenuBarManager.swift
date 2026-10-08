@@ -1118,7 +1118,7 @@ class MenuBarManager: NSObject, ObservableObject {
                 ErrorRecovery.shared.recordFailure(for: .api)
             }
             publishWidgetSnapshot()
-            return
+            // Status and console billing can still succeed when usage fails.
         case .updated(let result):
             guard var current = profileManager.profiles.first(where: { $0.id == source.id }), valid() else { return }
             let previous = current.claudeUsage

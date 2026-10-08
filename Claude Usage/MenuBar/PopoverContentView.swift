@@ -87,14 +87,10 @@ struct PopoverContentView: View {
     }
 
     private var displayUsage: ClaudeUsage {
-        if manager.clickedProfileId != nil { return viewingProfile?.claudeUsage ?? .empty }
-        return manager.usage
+        viewingProfile?.usageForDisplay ?? .unavailable
     }
 
-    private var displayAPIUsage: APIUsage? {
-        if manager.clickedProfileId != nil { return viewingProfile?.apiUsage }
-        return manager.apiUsage
-    }
+    private var displayAPIUsage: APIUsage? { viewingProfile?.apiUsage }
 
     private var displayProvider: Provider { viewingProfile?.provider ?? .anthropic }
     private var credentialError: Bool { viewingProfile.map { manager.providerCredentialErrors.contains($0.id) } ?? false }
@@ -211,6 +207,10 @@ struct PopoverContentView: View {
             }
 
             // Usage
+            if viewingProfile?.claudeUsage == nil {
+                Text("usage.no_snapshot".localized)
+                    .font(.caption).foregroundStyle(.secondary).padding(.horizontal, 16).padding(.vertical, 8)
+            }
             SmartUsageDashboard(usage: displayUsage, apiUsage: displayAPIUsage, provider: displayProvider)
 
             // Contextual Insights

@@ -56,4 +56,16 @@ final class CodexTokenRefreshCoordinatorTests: XCTestCase {
         XCTAssertEqual(next.refreshToken, "rotated")
         XCTAssertEqual(attempts, 2)
     }
+    func testWritebackAcceptsOwnEarlierRotationButRejectsAnotherLogin() {
+        let first = credentials("first")
+        let second = credentials("second")
+        let third = credentials("third")
+        XCTAssertTrue(CredentialRefreshGuard.canUpdateCodex(second, expected: second, replacement: third))
+        XCTAssertTrue(CredentialRefreshGuard.canUpdateCodex(third, expected: second, replacement: third))
+        XCTAssertFalse(CredentialRefreshGuard.canUpdateCodex(first, expected: second, replacement: third))
+        var anotherAccount = second
+        anotherAccount.accountId = "different-account"
+        XCTAssertFalse(CredentialRefreshGuard.canUpdateCodex(anotherAccount, expected: second, replacement: third))
+    }
+
 }

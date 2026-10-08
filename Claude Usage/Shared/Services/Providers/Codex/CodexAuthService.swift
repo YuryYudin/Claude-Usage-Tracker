@@ -275,14 +275,18 @@ final class CodexAuthService {
 
     private func persistRefreshed(_ credentials: CodexCredentials, for profile: Profile,
                                   original: CodexCredentials) async throws {
-        if let originalJSON = profile.codexCredentialsJSON {
+        if profile.codexCredentialsJSON != nil {
             let saved = await MainActor.run { () -> Bool in
                 guard var current = ProfileManager.shared.profiles.first(where: { $0.id == profile.id }),
                       current.provider == .codex, current.codexConfiguration == nil else { return false }
-                if current.codexCredentialsJSON != originalJSON {
-                    return current.codexCredentialsJSON.flatMap { Self.parse(Data($0.utf8)) }?.refreshToken == credentials.refreshToken
-                }
-                guard let serialized = Self.serializeAuthJSON(credentials, mergingInto: originalJSON) else { return false }
+                guard let currentJSON = current.codexCredentialsJSON,
+                      let currentCredentials = Self.parse(Data(currentJSON.utf8)),
+                      CredentialRefreshGuard.canUpdateCodex(currentCredentials, expected: original, replacement: credentials) else { return false }
+                if currentCredentials.refreshToken == credentials.refreshToken { return true }
+                // A preceding refresh in this request may already have patched the
+                // original profile snapshot. Compare token ownership, preserving
+                // current JSON metadata when committing a subsequent forced retry.
+                guard let serialized = Self.serializeAuthJSON(credentials, mergingInto: currentJSON) else { return false }
                 current.codexCredentialsJSON = serialized
                 return ProfileManager.shared.updateProfile(current)
             }

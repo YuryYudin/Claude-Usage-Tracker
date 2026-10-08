@@ -89,8 +89,10 @@ identity. Changing keys, targets or providers, deleting an account, or starting 
 newer refresh supersedes an old result. Switching the active account does not
 redirect another account's valid response, history, or billing cache.
 
-Failures and credential banners belong to the displayed account. A clicked
-account's popover reads its current cache and refreshes that account. Provider
+Status and console billing fetches remain independent of usage-fetch failure.
+Failures and credential banners belong to the displayed account. A popover
+reads the displayed account's current cache and refreshes that account. Accounts
+without a cache show an explicit no-snapshot state. Provider
 status links use the appropriate status service. Auto-switch stays within a
 compatible provider and does not apply Claude CLI behavior to Codex or GLM.
 
@@ -113,6 +115,8 @@ validation.
 The canonical widget target uses normalized shared usage. The integration retains
 the fork's contrast treatment under macOS greying, fifteen-minute stale handling,
 per-profile fetch timestamps, private bounded snapshots, and reload throttling.
+Tray pace/time markers use the selected quota duration and disappear when its
+timing is unavailable; monthly tool quotas do not inherit a five-hour pace.
 Schema version 4 adds labels for the selected quota and its secondary window.
 A named Codex bucket's secondary window comes from that same bucket; GLM's monthly
 tool quota is labelled as tools. Missing quotas are excluded rather than presented
@@ -138,14 +142,14 @@ quality for those additions.
 
 | Check | Result |
 |---|---|
-| Hosted Debug XCTest | 317 tests executed, zero failures, two Keychain tests skipped |
+| Hosted Debug XCTest | 320 tests executed, zero failures, two Keychain tests skipped |
 | Migration and persistence | Legacy metrics, UUIDs/targets/settings, malformed arrays, unknown providers, external changes, backup failure, secret fallback, rejected deletion/creation, and repeated migration covered |
 | Quota and refresh tests | Named buckets, weekly-only HTTP, monthly tools, token/credit selection, missing resets, stale responses, deleted accounts, overlap, and current display selection covered |
-| OAuth tests | Concurrent/late callers, token chains, failed-request retry, and changed credential sources covered with synthetic data |
+| OAuth tests | Concurrent/late callers, token chains, failed-request retry, changed credential sources, and write-back after an earlier rotation covered with synthetic data |
 | Widget tests | Bounds/corruption/privacy, selected bucket, heartbeat, labels, stale/fresh transitions, and reload behavior covered |
 | Actual source codec harness | Original fork records load in the integration; re-encoding preserves fixture identities/configurations; restoring original bytes loads through the actual old fork codec |
 | Universal Release build | App and embedded widget compile for `arm64` and `x86_64`, without a distribution signing identity |
-| Localization validator | App: fourteen locales and 917 keys; widget: fourteen locales and nine keys |
+| Localization validator | App: fourteen locales and 918 keys; widget: fourteen locales and nine keys |
 | Live credentials and desktop widgets | Require the signed comparison below |
 
 The two skipped tests require data-protection Keychain access that is unavailable
@@ -173,7 +177,7 @@ xcodebuild -project 'Claude Usage.xcodeproj' -scheme 'Claude Usage' \
 
 Local artifacts are under `/tmp/claude-usage-integration-*`. The final XCTest log
 is `claude-usage-integration-verified-tests.log`; optimized Release validation is
-in `claude-usage-integration-release-optimizer-fix.log`. The release bundle is under
+in `claude-usage-integration-verified-release.log`. The release bundle is under
 `claude-usage-integration-release-derived/Build/Products/Release/Claude Usage.app`.
 It is a build artifact, not an installed or distribution-signed release.
 
@@ -195,8 +199,9 @@ Before replacing the working installation:
    existing migration backup separately; the candidate does not overwrite it.
 3. Compare all accounts against the working build: Claude cookies and pinned CLI
    sources; each Codex local home and SSH target; and each GLM key and selected
-   quota. Verify cache age, selected tray limits, history, alerts, and account
-   switching. Exercise token refresh deliberately rather than by restoring stale
+   quota. Record the working build baseline before migration; compare the candidate
+   against that baseline using private copied stores where possible. Verify cache
+   age, selected tray limits, history, alerts, and account switching. Exercise token refresh deliberately rather than by restoring stale
    refresh tokens.
 4. Verify the installed widgets in all sizes, light/dark mode and macOS greying,
    including fresh/stale accounts, credential removal, and multiple named buckets.
