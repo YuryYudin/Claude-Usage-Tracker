@@ -54,7 +54,7 @@ class DataStore: StorageProvider {
 
     init() {
         // Use standard UserDefaults (app container)
-        self.defaults = UserDefaults.standard
+        self.defaults = UserDefaults.appStorage
         LoggingService.shared.log("DataStore: Using standard app container storage")
     }
 

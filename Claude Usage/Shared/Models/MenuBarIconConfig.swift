@@ -12,12 +12,14 @@ enum MenuBarMetricType: String, Codable, CaseIterable, Identifiable {
     case session
     case week
     case api
+    case codex // Legacy decode only
+    case zai // Legacy decode only
 
     var id: String { rawValue }
 
     var displayName: String {
         switch self {
-        case .session:
+        case .session, .codex, .zai:
             return "Session Usage"
         case .week:
             return "Week Usage"
@@ -28,7 +30,7 @@ enum MenuBarMetricType: String, Codable, CaseIterable, Identifiable {
 
     var prefixText: String {
         switch self {
-        case .session:
+        case .session, .codex, .zai:
             return "S:"
         case .week:
             return "W:"
@@ -39,7 +41,7 @@ enum MenuBarMetricType: String, Codable, CaseIterable, Identifiable {
 
     var description: String {
         switch self {
-        case .session:
+        case .session, .codex, .zai:
             return "5-hour rolling window usage"
         case .week:
             return "Weekly token usage (all models)"
@@ -50,7 +52,7 @@ enum MenuBarMetricType: String, Codable, CaseIterable, Identifiable {
 
     var icon: String {
         switch self {
-        case .session:
+        case .session, .codex, .zai:
             return "clock.fill"
         case .week:
             return "calendar.badge.clock"
@@ -453,5 +455,17 @@ struct MenuBarIconConfiguration: Codable, Equatable {
     /// Default configuration (session only, like current behavior)
     static var `default`: MenuBarIconConfiguration {
         MenuBarIconConfiguration()
+    }
+}
+
+extension MenuBarIconConfiguration {
+    mutating func migrateLegacyMetrics(for provider: Provider) {
+        let legacyType: MenuBarMetricType? = provider == .codex ? .codex : (provider == .zai ? .zai : nil)
+        if let legacyType, var legacy = metrics.first(where: { $0.metricType == legacyType }) {
+            legacy.metricType = .session
+            metrics.removeAll { $0.metricType == .session }
+            metrics.append(legacy)
+        }
+        metrics.removeAll { $0.metricType == .codex || $0.metricType == .zai }
     }
 }

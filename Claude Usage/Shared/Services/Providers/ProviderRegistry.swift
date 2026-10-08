@@ -56,11 +56,24 @@ enum ProviderRegistry {
             primaryWindowLabelKey: "usage.window.session",
             secondaryWindowLabelKey: "usage.window.weekly"
         ),
+        .zai: ProviderDescriptor(
+            id: .zai, displayName: "Z.ai GLM", logoAssetName: "ProviderLogoZAI",
+            logoSystemSymbolFallback: "z.square.fill", statusPageURL: nil,
+            capabilities: ProviderCapabilities(tokenCounts: false, perModelBreakdown: false,
+                consoleBilling: false, cliAccountSync: false, autoStartSession: false,
+                overageChecks: false, credits: false), credentialSections: [.zaiAccount],
+            primaryWindowLabelKey: "usage.window.session", secondaryWindowLabelKey: "usage.window.weekly"
+        ),
     ]
 
     static func descriptor(for provider: Provider) -> ProviderDescriptor {
         guard let descriptor = descriptors[provider] else {
-            fatalError("ProviderRegistry: missing descriptor for \(provider.rawValue)")
+            return ProviderDescriptor(id: provider, displayName: provider.rawValue,
+                logoAssetName: "", logoSystemSymbolFallback: "questionmark.circle", statusPageURL: nil,
+                capabilities: ProviderCapabilities(tokenCounts: false, perModelBreakdown: false,
+                    consoleBilling: false, cliAccountSync: false, autoStartSession: false,
+                    overageChecks: false, credits: false), credentialSections: [],
+                primaryWindowLabelKey: "usage.window.session", secondaryWindowLabelKey: "usage.window.weekly")
         }
         return descriptor
     }
@@ -73,6 +86,18 @@ enum ProviderRegistry {
             return AnthropicUsageProvider.shared
         case .codex:
             return CodexUsageProvider.shared
+        case .zai:
+            return ZAIUsageProvider.shared
+        case .unsupported:
+            return UnsupportedUsageProvider()
         }
+    }
+}
+
+private struct UnsupportedUsageProvider: UsageProviderService {
+    var provider: Provider { .unsupported("unknown") }
+    func hasCredentials(for profile: Profile) -> Bool { false }
+    func fetchUsage(for profile: Profile) async throws -> ClaudeUsage {
+        throw AppError(code: .providerCredentialsNotFound, message: "This account's provider is unavailable in this build", isRecoverable: false)
     }
 }

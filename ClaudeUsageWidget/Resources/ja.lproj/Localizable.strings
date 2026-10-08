@@ -6,3 +6,6 @@
 "widget.session.desc" = "アクティブなプロファイルの5時間セッション使用量。";
 "widget.overview.name" = "使用量オーバービュー";
 "widget.overview.desc" = "表示中の全プロファイルのセッション・週間使用量。";
+
+"widget.tools" = "ツール呼び出し";
+"widget.quota" = "Quota";

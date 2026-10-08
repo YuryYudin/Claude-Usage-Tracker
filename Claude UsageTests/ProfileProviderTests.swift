@@ -1,10 +1,8 @@
 import XCTest
 @testable import Claude_Usage
 
-/// Multi-provider data model: the `provider` field must decode tolerantly so
-/// pre-provider profiles (and profiles written by future app versions with
-/// unknown providers) never fail to load — a decode throw here wipes the
-/// whole profile list (see PR #271 for the ClaudeUsage precedent).
+/// Legacy identities and future provider names survive decoding; malformed
+/// records fail safely through ProfileStore without replacing the original data.
 final class ProfileProviderTests: XCTestCase {
 
     // MARK: - Helpers
@@ -32,14 +30,14 @@ final class ProfileProviderTests: XCTestCase {
         XCTAssertEqual(profile.provider, .anthropic)
     }
 
-    func testUnknownProviderRawValueDegradesToAnthropic() throws {
+    func testUnknownProviderRawValueRemainsUnsupported() throws {
         let profile = try decodeProfile(legacyProfileJSON(extraFields: "\"provider\": \"some-future-provider\""))
-        XCTAssertEqual(profile.provider, .anthropic, "unknown provider must degrade, not throw")
+        XCTAssertEqual(profile.provider, .unsupported("some-future-provider"))
+        XCTAssertFalse(profile.hasAnyCredentials)
     }
 
-    func testNonStringProviderValueDegradesToAnthropic() throws {
-        let profile = try decodeProfile(legacyProfileJSON(extraFields: "\"provider\": 42"))
-        XCTAssertEqual(profile.provider, .anthropic, "malformed provider must degrade, not throw")
+    func testNonStringProviderValueRejectsMalformedRecord() {
+        XCTAssertThrowsError(try decodeProfile(legacyProfileJSON(extraFields: "\"provider\": 42")))
     }
 
     func testCodexProviderRoundTrips() throws {

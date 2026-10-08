@@ -6,3 +6,6 @@
 "widget.session.desc" = "Utilização atual da sessão de 5 horas do perfil ativo.";
 "widget.overview.name" = "Visão geral da utilização";
 "widget.overview.desc" = "Utilização da sessão e utilização semanal de todos os perfis apresentados.";
+
+"widget.tools" = "Chamadas de ferramentas";
+"widget.quota" = "Quota";

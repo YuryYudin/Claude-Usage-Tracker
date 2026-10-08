@@ -172,4 +172,72 @@ final class WidgetSnapshotServiceTests: XCTestCase {
         XCTAssertEqual(sanitized.count, 64)
         XCTAssertTrue(sanitized.hasPrefix("badname"))
     }
+
+    // MARK: - Providers
+
+    func testCodexProfilePublishesSelectedRateLimit() throws {
+        let primaryReset = currentDate.addingTimeInterval(3600)
+        let weeklyReset = currentDate.addingTimeInterval(86400)
+        let usage = CodexUsage(
+            account: nil,
+            rateLimits: [
+                CodexRateLimit(
+                    id: "codex",
+                    name: "Codex",
+                    primary: CodexRateLimitWindow(
+                        usedPercent: 23,
+                        windowDurationMinutes: 300,
+                        resetsAt: primaryReset
+                    ),
+                    secondary: CodexRateLimitWindow(
+                        usedPercent: 47,
+                        windowDurationMinutes: 10_080,
+                        resetsAt: weeklyReset
+                    ),
+                    credits: nil,
+                    planType: "pro",
+                    reachedType: nil
+                )
+            ],
+            tokenUsage: nil,
+            lastUpdated: currentDate
+        )
+        let config = CodexProfileConfiguration()
+        let profile = Profile(name: "Codex", provider: .codex,
+            codexConfiguration: config, codexUsage: usage, claudeUsage: usage.sharedUsage(configuration: config))
+        let service = makeService()
+
+        service.publish(profiles: [profile], activeProfileId: profile.id)
+
+        let entry = try XCTUnwrap(writtenSnapshots.first?.profiles.first)
+        XCTAssertEqual(entry.provider, .codex)
+        XCTAssertEqual(entry.sessionPercentage, 23)
+        XCTAssertEqual(entry.sessionResetTime, primaryReset)
+        XCTAssertEqual(entry.weeklyPercentage, 47)
+        XCTAssertEqual(entry.weeklyResetTime, weeklyReset)
+    }
+    func testLabelChangeReloadsEvenWhenUsagePercentagesAreUnchanged() {
+        let service = makeService(reloadInterval: 0)
+        let original = makeEntry()
+        service.publish(entries: [original])
+        let changed = WidgetSnapshot.ProfileEntry(id: original.id, name: original.name,
+            isActive: original.isActive, isDisplayed: original.isDisplayed,
+            sessionPercentage: original.sessionPercentage, sessionResetTime: original.sessionResetTime,
+            weeklyPercentage: original.weeklyPercentage, weeklyResetTime: original.weeklyResetTime,
+            lastUpdated: original.lastUpdated, primaryLabel: "widget.tools")
+        service.publish(entries: [changed])
+        XCTAssertEqual(reloadCount, 2)
+        XCTAssertEqual(writtenSnapshots.last?.profiles.first?.primaryLabel, "widget.tools")
+    }
+
+    func testFreshSampleReloadsPreviouslyStaleProfileWithFlatUsage() {
+        let service = makeService()
+        let original = makeEntry()
+        service.publish(entries: [original])
+        currentDate += 901
+        service.publish(entries: [makeEntry(id: original.id)])
+        XCTAssertEqual(reloadCount, 2)
+        XCTAssertEqual(writtenSnapshots.last?.profiles.first?.lastUpdated, currentDate)
+    }
+
 }

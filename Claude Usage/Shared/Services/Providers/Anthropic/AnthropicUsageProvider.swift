@@ -28,8 +28,8 @@ final class AnthropicUsageProvider: UsageProviderService {
     /// `ClaudeAPIService.getAuthentication()` can discover during the actual
     /// API call (mirrors the old `MenuBarManager.hasAnyAvailableCredentials`).
     func hasCredentials(for profile: Profile) -> Bool {
-        profile.hasUsageCredentials
-            || ClaudeCodeSyncService.shared.hasUsableSystemCredentials()
+        profile.hasAnyCredentials
+            || (profile.id == ProfileManager.shared.activeProfile?.id && ClaudeCodeSyncService.shared.hasUsableSystemCredentials())
     }
 
     /// Fetches usage data for a specific profile using its credentials.
@@ -93,6 +93,6 @@ final class AnthropicUsageProvider: UsageProviderService {
     /// `fetchUsageData()`, whose internal `getAuthentication()` chain covers
     /// the active profile plus system-level fallbacks. Keep that exact path.
     func fetchUsageForActiveProfile(_ profile: Profile) async throws -> ClaudeUsage {
-        try await apiService.fetchUsageData()
+        try await fetchUsage(for: profile)
     }
 }

@@ -287,7 +287,9 @@ struct SettingsView: View {
                 case .cliAccount:
                     CLIAccountView()
                 case .codexAccount:
-                    CodexAccountView()
+                    CodexConnectionSettingsView()
+                case .zaiAccount:
+                    ZAISettingsView()
 
                 // Profile Settings
                 case .appearance:
@@ -605,6 +607,7 @@ enum SettingsSection: String, CaseIterable {
     case apiConsole
     case cliAccount
     case codexAccount
+    case zaiAccount
 
     // Profile Settings
     case appearance
@@ -631,6 +634,7 @@ enum SettingsSection: String, CaseIterable {
         case .apiConsole: return "section.api_console_title".localized
         case .cliAccount: return "section.cli_account_title".localized
         case .codexAccount: return "section.codex_account_title".localized
+        case .zaiAccount: return "zai.settings.nav_title".localized
         case .appearance: return "section.appearance_title".localized
         case .general: return "section.general_title".localized
         case .history: return "section.history_title".localized
@@ -655,6 +659,7 @@ enum SettingsSection: String, CaseIterable {
         case .apiConsole: return "dollarsign.circle.fill"
         case .cliAccount: return "terminal.fill"
         case .codexAccount: return "terminal.fill"
+        case .zaiAccount: return "z.square.fill"
         case .appearance: return "paintbrush.fill"
         case .general: return "gearshape.fill"
         case .history: return "chart.bar.xaxis"
@@ -679,6 +684,7 @@ enum SettingsSection: String, CaseIterable {
         case .apiConsole: return "section.api_console_desc".localized
         case .cliAccount: return "section.cli_account_desc".localized
         case .codexAccount: return "section.codex_account_desc".localized
+        case .zaiAccount: return "zai.settings.nav_desc".localized
         case .appearance: return "section.appearance_desc".localized
         case .general: return "section.general_desc".localized
         case .history: return "section.history_desc".localized
@@ -708,7 +714,7 @@ enum SettingsSection: String, CaseIterable {
 
     var isCredential: Bool {
         switch self {
-        case .claudeAI, .apiConsole, .cliAccount, .codexAccount:
+        case .claudeAI, .apiConsole, .cliAccount, .codexAccount, .zaiAccount:
             return true
         default:
             return false
@@ -824,6 +830,7 @@ struct ProfileCredentialCardsRow: View {
         case .apiConsole: return "API Console"
         case .cliAccount: return "CLI Account"
         case .codexAccount: return "Codex CLI"
+        case .zaiAccount: return "Z.ai GLM"
         default: return section.title
         }
     }
@@ -834,6 +841,7 @@ struct ProfileCredentialCardsRow: View {
         case .apiConsole: return credentials?.apiSessionKey != nil
         case .cliAccount: return profileManager.activeProfile?.hasCliAccount ?? false
         case .codexAccount: return profileManager.activeProfile?.hasUsageCredentials ?? false
+        case .zaiAccount: return profileManager.activeProfile?.hasUsageCredentials ?? false
         default: return false
         }
     }

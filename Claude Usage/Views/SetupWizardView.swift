@@ -9,6 +9,7 @@ enum SetupMode {
     case cliDetected(credentials: String)
     case manualSetup
     case codexSetup
+    case zaiSetup
 }
 
 // MARK: - Wizard State Machine
@@ -61,6 +62,10 @@ struct SetupWizardView: View {
                         setupMode = .loading
                     case .codex:
                         setupMode = .codexSetup
+                    case .zai:
+                        setupMode = .zaiSetup
+                    case .unsupported:
+                        break
                     }
                 },
                 onSkip: { dismiss() }
@@ -86,6 +91,11 @@ struct SetupWizardView: View {
         case .manualSetup:
             manualSetupBody
 
+        case .zaiSetup:
+            ZAISetupView(onDone: {
+                NotificationCenter.default.post(name: .credentialsChanged, object: nil)
+                dismiss()
+            }, onBack: { setupMode = .chooseProvider })
         case .codexSetup:
             CodexSetupView(
                 onDone: {
@@ -329,7 +339,7 @@ struct SetupWizardView: View {
 
     private func skipMigration() {
         // Mark migration as completed (declined) so we don't ask again
-        UserDefaults.standard.set(true, forKey: "HasMigratedFromAppGroup")
+        UserDefaults.appStorage.set(true, forKey: "HasMigratedFromAppGroup")
         migrationMessage = "wizard.migration_skipped".localized
     }
 }
@@ -1068,7 +1078,7 @@ struct ProviderChoiceSetupView: View {
                                     .font(.system(size: 14, weight: .semibold))
                                 Text(provider == .anthropic
                                      ? "setup.choose_provider.anthropic_hint".localized
-                                     : "setup.choose_provider.codex_hint".localized)
+                                     : (provider == .zai ? "zai.settings.subtitle".localized : "setup.choose_provider.codex_hint".localized))
                                     .font(.system(size: 11))
                                     .foregroundColor(.secondary)
                                     .multilineTextAlignment(.center)

@@ -79,35 +79,33 @@ struct PopoverContentView: View {
         return "?"
     }
 
-    // Computed properties for multi-profile mode support
+    private var viewingProfile: Profile? {
+        if let id = manager.clickedProfileId {
+            return profileManager.profiles.first { $0.id == id }
+        }
+        return profileManager.activeProfile
+    }
+
     private var displayUsage: ClaudeUsage {
-        manager.clickedProfileUsage ?? manager.usage
+        if manager.clickedProfileId != nil { return viewingProfile?.claudeUsage ?? .empty }
+        return manager.usage
     }
 
     private var displayAPIUsage: APIUsage? {
-        // When viewing a non-active profile, use only that profile's API data
-        // to avoid leaking the active profile's console data
-        if manager.clickedProfileUsage != nil {
-            return manager.clickedProfileAPIUsage
-        }
+        if manager.clickedProfileId != nil { return viewingProfile?.apiUsage }
         return manager.apiUsage
     }
 
-    /// Provider of the profile being viewed (clicked profile in multi-profile
-    /// mode, else the active profile).
-    private var displayProvider: Provider {
-        let viewingProfile = manager.clickedProfileId.flatMap { id in
-            profileManager.profiles.first(where: { $0.id == id })
-        } ?? profileManager.activeProfile
-        return viewingProfile?.provider ?? .anthropic
-    }
+    private var displayProvider: Provider { viewingProfile?.provider ?? .anthropic }
+    private var credentialError: Bool { viewingProfile.map { manager.providerCredentialErrors.contains($0.id) } ?? false }
+    private var failureCount: Int { viewingProfile.flatMap { manager.providerFailures[$0.id] } ?? 0 }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Header
             SmartHeader(
                 usage: displayUsage,
-                status: manager.status,
+                status: manager.providerStatuses[displayProvider],
                 isRefreshing: isRefreshing,
                 onRefresh: {
                     withAnimation(.easeInOut(duration: 0.3)) {
@@ -128,7 +126,12 @@ struct PopoverContentView: View {
             PopoverDivider()
 
             // Error / stale data banners
-            if manager.hasCredentialError {
+            if let storageError = profileManager.storageError {
+                StatusBannerView(icon: "externaldrive.badge.exclamationmark", message: storageError, color: .orange) {
+                    onPreferences()
+                }
+            }
+            if credentialError {
                 StatusBannerView(
                     icon: "exclamationmark.triangle.fill",
                     message: "popover.banner.credentials_expired".localized,
@@ -136,15 +139,15 @@ struct PopoverContentView: View {
                 ) {
                     onPreferences()
                 }
-            } else if manager.consecutiveRefreshFailures >= 3 {
+            } else if failureCount >= 3 {
                 StatusBannerView(
                     icon: "arrow.clockwise.circle.fill",
-                    message: String(format: "popover.banner.refresh_failed".localized, manager.consecutiveRefreshFailures),
+                    message: String(format: "popover.banner.refresh_failed".localized, failureCount),
                     color: .yellow
                 ) {
                     onRefresh()
                 }
-            } else if let lastRefresh = manager.lastSuccessfulRefreshTime,
+            } else if let lastRefresh = viewingProfile?.claudeUsage?.lastUpdated,
                       Date().timeIntervalSince(lastRefresh) > 300 {
                 let minutesAgo = Int(Date().timeIntervalSince(lastRefresh) / 60)
                 StatusBannerView(
@@ -457,7 +460,7 @@ struct ProfileSwitcherBar: View {
 // MARK: - Smart Header Component
 struct SmartHeader: View {
     let usage: ClaudeUsage
-    let status: ClaudeStatus
+    let status: ClaudeStatus?
     let isRefreshing: Bool
     let onRefresh: () -> Void
     let onManageProfiles: () -> Void
@@ -467,7 +470,7 @@ struct SmartHeader: View {
     @StateObject private var profileManager = ProfileManager.shared
 
     private var statusColor: Color {
-        switch status.indicator.color {
+        switch status?.indicator.color ?? .gray {
         case .green: return .adaptiveGreen
         case .yellow: return .yellow
         case .orange: return .orange
@@ -500,9 +503,10 @@ struct SmartHeader: View {
             VStack(alignment: .leading, spacing: 2) {
                 ProfileSwitcherCompact(onManageProfiles: onManageProfiles)
 
-                // Status
+                // Only show a status received for this provider.
+                if let status, let endpoint = (clickedProfile ?? profileManager.activeProfile)?.provider.descriptor.statusPageURL {
                 Button(action: {
-                    if let url = URL(string: "https://status.claude.com") {
+                    if let url = URL(string: "\(endpoint.scheme ?? "https")://\(endpoint.host ?? "")") {
                         NSWorkspace.shared.open(url)
                     }
                 }) {
@@ -517,7 +521,8 @@ struct SmartHeader: View {
                     }
                 }
                 .buttonStyle(.plain)
-                .help("Click to open status.claude.com")
+                .help(endpoint.host ?? "")
+                }
             }
 
             Spacer()
@@ -625,9 +630,35 @@ struct SmartUsageDashboard: View {
         SharedDataStore.shared.loadPopoverTimeDisplay()
     }
 
+    private func quotaTitle(_ quota: UsageQuota) -> String {
+        switch quota.role {
+        case .session: return "menubar.session_usage".localized
+        case .weekly: return "menubar.weekly_usage".localized
+        case .tools: return "zai.window.tools_title".localized
+        case .other: return quota.label
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
+            if let quotas = usage.quotaWindows, !quotas.isEmpty {
+                ForEach(quotas) { quota in
+                    UsageRow(
+                        title: quotaTitle(quota), subtitle: quota.label,
+                        usedPercentage: quota.effectivePercentage, showRemaining: showRemainingPercentage,
+                        resetTime: quota.resetTime,
+                        periodDuration: quota.role == .tools ? nil : quota.durationMinutes.map { TimeInterval($0 * 60) },
+                        showTimeMarker: showTimeMarker, showPaceMarker: showPaceMarker,
+                        usePaceColoring: usePaceColoring, timeDisplay: timeDisplay
+                    )
+                    if let consumed = quota.consumed, let allowance = quota.allowance {
+                        Text("\(consumed.formatted()) / \(allowance.formatted()) \(quota.unit ?? "")")
+                            .font(.caption2).foregroundStyle(.secondary)
+                    }
+                }
+            } else {
             // Primary: Session Usage
+            if usage.sessionAvailable != false {
             UsageRow(
                 title: "menubar.session_usage".localized,
                 subtitle: "menubar.5_hour_window".localized,
@@ -641,6 +672,7 @@ struct SmartUsageDashboard: View {
                 timeDisplay: timeDisplay
             )
 
+            }
             if usage.designWeeklyTokensUsed > 0 {
                 UsageRow(
                     title: "menubar.design_usage".localized,
@@ -655,6 +687,7 @@ struct SmartUsageDashboard: View {
             }
 
             // All Models (Weekly)
+            if usage.weeklyAvailable != false {
             UsageRow(
                 title: "menubar.all_models".localized,
                 tag: "menubar.weekly".localized,
@@ -669,6 +702,7 @@ struct SmartUsageDashboard: View {
                 timeDisplay: timeDisplay
             )
 
+            }
             if usage.fableWeeklyTokensUsed > 0 {
                 UsageRow(
                     title: "menubar.fable_usage".localized,
@@ -706,6 +740,7 @@ struct SmartUsageDashboard: View {
                 )
             }
 
+            }
             // Extra usage (cost-based)
             if let used = usage.costUsed, let limit = usage.costLimit, let currency = usage.costCurrency, limit > 0 {
                 let usedPercentage = (used / limit) * 100.0

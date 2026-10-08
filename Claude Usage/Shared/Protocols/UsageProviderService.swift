@@ -27,10 +27,28 @@ protocol UsageProviderService {
     /// reflects the currently signed-in CLI account and is therefore only
     /// safe for the active profile). Defaults to `fetchUsage(for:)`.
     func fetchUsageForActiveProfile(_ profile: Profile) async throws -> ClaudeUsage
+    func fetchStatus() async throws -> ClaudeStatus?
+    func fetchResult(for profile: Profile, active: Bool) async throws -> UsageProviderResult
 }
 
 extension UsageProviderService {
+    func fetchStatus() async throws -> ClaudeStatus? {
+        guard let url = provider.descriptor.statusPageURL else { return nil }
+        return try await ClaudeStatusService(statusURL: url).fetchStatus()
+    }
+
+    func fetchResult(for profile: Profile, active: Bool) async throws -> UsageProviderResult {
+        let usage = try await (active ? fetchUsageForActiveProfile(profile) : fetchUsage(for: profile))
+        return UsageProviderResult(usage: usage)
+    }
     func fetchUsageForActiveProfile(_ profile: Profile) async throws -> ClaudeUsage {
         try await fetchUsage(for: profile)
     }
+}
+
+/// Providers may attach a cache update, applied only after account validation.
+struct UsageProviderResult {
+    var usage: ClaudeUsage
+    var updateDetails: (inout Profile) -> Void = { _ in }
+    var projectUsage: ((Profile) -> ClaudeUsage)? = nil
 }

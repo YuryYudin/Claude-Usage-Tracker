@@ -145,7 +145,6 @@
 "setup.welcome.subtitle" = "設定您的 API 存取以開始追蹤使用情況";
 "setup.step.get_session_key" = "取得您的 Session 金鑰";
 "setup.step.get_session_key.description" = "您需要從 claude.ai 取得您的 Session 金鑰";
-"setup.step.enter_session_key" = "輸入您的 Session 金鑰";
 "setup.open_claude_ai" = "開啟 claude.ai";
 "setup.show_instructions" = "顯示說明";
 "setup.hide_instructions" = "隱藏";
@@ -626,7 +625,6 @@
 /* MARK: - Setup Wizard */
 /* ==================== */
 "setup.step.enter_session_key" = "輸入金鑰";
-"wizard.test_connection" = "測試連線";
 "wizard.select_org_title" = "您要追蹤哪個組織？";
 "wizard.select_org_subtitle" = "選擇用於使用監控的 Claude 組織";
 "wizard.config_summary" = "設定摘要";
@@ -765,8 +763,6 @@
 "about.reset_confirmation_title" = "重置所有軟體資料？";
 "about.reset_confirm" = "重置";
 "about.reset_confirmation_message" = "這將永久刪除所有設定檔、憑證和設定。軟體將結束，您需要重新設定。此動作無法復原。";
-"wizard.migration_skipped" = "遷移已跳過。如果需要，您可以稍後手動同步舊資料。";
-"wizard.skip_migration" = "跳過";
 
 /* Claude Code Info */
 "wizard.claude_code_info_title" = "使用 Claude Code？";
@@ -785,7 +781,6 @@
 "history.chart.session_title" = "Session 使用歷史";
 "history.chart.weekly_title" = "每週使用趨勢";
 "history.chart.billing_title" = "每月 API 支出";
-"history.chart.now" = "現在";
 "history.empty.session_title" = "無 Session 歷史";
 "history.empty.session_description" = "每 5 小時重置後將記錄 Session 使用情況";
 "history.empty.weekly_title" = "無每週歷史";
@@ -1079,3 +1074,106 @@
 "support.popup_signature" = "Claude Usage 背後的一人團隊";
 "support.popup_body" = "免費、開源、一人開發——沒有廣告，沒有追蹤。如果它曾幫你避免燒掉工作階段額度，一杯咖啡就能讓它繼續前進。";
 "support.popup_days" = "已守護你的額度 %d 天 — 永遠免費";
+
+// Additional provider connections and quotas
+
+"codex.settings.nav_title" = "OpenAI Codex";
+"codex.settings.nav_desc" = "設定 Codex 使用量監控";
+"codex.settings.title" = "OpenAI Codex";
+"codex.settings.subtitle" = "設定此設定檔的本機或 SSH Codex 連線與使用量顯示";
+"codex.settings.monitoring_title" = "監控";
+"codex.settings.monitoring_desc" = "Codex 使用量屬於此設定檔，並共用 App 的設定檔設定。";
+"codex.settings.monitoring_toggle" = "監控 Codex 使用量";
+"codex.settings.monitoring_toggle_desc" = "更新使用量時，執行此設定檔的本機或 SSH Codex app-server。";
+"codex.settings.connection_title" = "連線";
+"codex.settings.connection_desc" = "在這部 Mac 上使用 Codex，或透過 SSH 主機別名連線。";
+"codex.settings.executable" = "Codex 執行檔";
+"codex.settings.executable_auto" = "自動偵測 codex";
+"codex.settings.choose" = "選擇";
+"codex.settings.auto" = "自動";
+"codex.settings.account" = "帳號";
+"codex.settings.show_email" = "顯示帳號電子郵件";
+"codex.settings.show_email_desc" = "在設定中顯示已登入 Codex 帳號的電子郵件地址。";
+"codex.settings.last_refresh" = "上次成功更新";
+"codex.settings.recheck" = "重新檢查";
+"codex.settings.refresh" = "立即更新";
+"codex.settings.setup_title" = "設定指南";
+"codex.settings.setup_desc" = "在所選電腦上安裝 Codex 並登入。SSH 設定檔需要非互動式連線。";
+"codex.settings.open_docs" = "開啟 Codex 說明文件";
+"codex.settings.tray_title" = "選單列";
+"codex.settings.tray_desc" = "自訂 Codex 提供者圖示和使用量項目。";
+"codex.settings.multi_profile_hint" = "Codex 是獨立的提供者設定檔。請在「管理設定檔」中選取，以便在多設定檔模式中顯示。";
+"codex.settings.bucket" = "選單列用量限制項目";
+"codex.settings.bucket_desc" = "選擇用來控制此設定檔選單列圖示和提醒的 Codex 限制。";
+"codex.settings.automatic" = "自動";
+"codex.settings.notifications_title" = "通知";
+"codex.settings.notifications_desc" = "所選 Codex 用量限制項目超過臨界值時發出提醒。";
+"codex.settings.notifications_toggle" = "Codex 使用量提醒";
+"codex.settings.notifications_toggle_desc" = "在每個用量限制期間，針對每個臨界值傳送一次提醒。";
+"codex.settings.usage_title" = "使用量資料";
+"codex.settings.usage_desc" = "此設定檔的 Codex app-server 連線所傳回的使用量。";
+"codex.settings.credits" = "點數";
+"codex.settings.unlimited" = "無限制";
+"codex.settings.available" = "可用";
+"codex.settings.lifetime_tokens" = "累計 token";
+"codex.settings.privacy" = "驗證由所選電腦上的 Codex CLI 管理。SSH 憑證由 OpenSSH 管理；此 App 不會讀取 Codex 憑證檔案，也不會儲存 SSH 私密金鑰。";
+"codex.settings.no_usage" = "尚未載入 Codex 使用量。";
+"codex.settings.checking" = "正在檢查 Codex 安裝項目…";
+"codex.settings.not_installed" = "找不到 Codex CLI";
+"codex.settings.signed_out" = "Codex CLI 尚未登入";
+"codex.settings.connected" = "Codex 已連線";
+"codex.settings.copy" = "複製指令";
+"codex.settings.choose_title" = "選擇 Codex 執行檔";
+"codex.settings.choose_message" = "選取 codex 命令列執行檔。";
+"codex.settings.experimental_note" = "Codex app-server 是實驗性整合功能。遠端設定檔使用加密的 SSH stdio 連線，不會將 app-server 公開為網路服務。";
+"codex.onboarding.title" = "OpenAI Codex 使用量";
+"codex.onboarding.detected" = "已偵測到 Codex CLI。完成設定後，請在「設定」→「管理設定檔」中建立 OpenAI Codex 設定檔。";
+"codex.onboarding.optional" = "你也可以稍後在「設定」→「管理設定檔」中建立本機或 SSH Codex 設定檔。";
+"codex.onboarding.copy_command" = "複製設定指令";
+"zai.settings.nav_title" = "Z.ai GLM";
+"zai.settings.nav_desc" = "設定 Z.ai GLM Coding Plan 用量監控";
+"zai.settings.title" = "Z.ai GLM";
+"zai.settings.subtitle" = "使用 z.ai API 金鑰追蹤此設定檔的 GLM Coding Plan 額度";
+"zai.settings.connection_title" = "連線";
+"zai.settings.connection_desc" = "貼上具有有效 GLM Coding Plan 訂閱的 z.ai API 金鑰。";
+"zai.settings.api_key" = "z.ai API 金鑰";
+"zai.settings.api_key_help" = "在 z.ai → API Keys 建立 API 金鑰。Coding Plan 金鑰會回報 5 小時、每週與工具額度。金鑰會儲存在鑰匙圈中。";
+"zai.settings.api_key_placeholder" = "貼上你的 z.ai API 金鑰";
+"zai.settings.api_key_placeholder_keep" = "輸入新的 z.ai API 金鑰";
+"zai.settings.save_key" = "儲存金鑰";
+"zai.settings.replace_key" = "取代";
+"zai.settings.remove_key" = "移除";
+"zai.settings.setup_title" = "設定指南";
+"zai.settings.setup_desc" = "訂閱 GLM Coding Plan 並建立 API 金鑰。";
+"zai.settings.setup_steps" = "1. 在 z.ai 訂閱 GLM Coding Plan（Lite、Pro 或 Max）。\n2. 在 API Keys 建立 API 金鑰。\n3. 將金鑰貼到上方；額度會依設定檔的間隔自動更新。";
+"zai.settings.open_docs" = "開啟方案文件";
+"zai.settings.open_console" = "開啟 z.ai 主控台";
+"zai.settings.bucket" = "選單列額度視窗";
+"zai.settings.bucket_desc" = "選擇要驅動此設定檔選單列圖示與警示的 z.ai 額度。";
+"zai.settings.usage_title" = "用量資料";
+"zai.settings.usage_desc" = "z.ai 監控 API 針對此設定檔金鑰回報的額度。";
+"zai.settings.no_usage" = "尚未載入任何 z.ai 用量。";
+"zai.settings.no_key" = "未設定 z.ai API 金鑰";
+"zai.settings.key_configured" = "已設定 API 金鑰";
+"zai.settings.checking" = "正在連線至 z.ai…";
+"zai.settings.connected" = "z.ai 已連線";
+"zai.settings.error_state" = "z.ai 連線錯誤";
+"zai.settings.refresh" = "立即重新整理";
+"zai.settings.plan" = "方案";
+"zai.settings.privacy" = "API 金鑰儲存在 macOS 鑰匙圈中，僅透過 HTTPS 傳送至 api.z.ai。";
+"zai.onboarding.title" = "Z.ai GLM Coding Plan";
+"zai.onboarding.optional" = "使用 GLM Coding Plan 嗎？稍後可在「設定」→「管理設定檔」建立 Z.ai GLM 設定檔。";
+"zai.onboarding.open_console" = "取得 API 金鑰";
+"zai.window.session" = "5 小時額度視窗";
+"zai.window.weekly" = "每週額度視窗";
+"zai.window.tools_title" = "網頁工具";
+"zai.window.tools" = "每月 Vision、Web Search 與 Reader 呼叫";
+
+
+// Provider integration and account recovery
+"codex.connection_source" = "Connection source";
+"codex.connection_http" = "HTTP credentials";
+"codex.connection_cli" = "Local CLI or SSH";
+"profiles.storage_error.title" = "Accounts could not be loaded safely";
+"profiles.storage_error.description" = "Your original account data has been preserved. Check the storage error and migration backup before continuing.";
+"settings.updates.integration_disabled" = "Updates are paused for this build to protect Codex connections and GLM accounts. A compatible update channel is required before updates can resume.";

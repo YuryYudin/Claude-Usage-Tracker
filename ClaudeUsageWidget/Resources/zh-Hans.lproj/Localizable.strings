@@ -6,3 +6,6 @@
 "widget.session.desc" = "当前活跃配置文件的 5 小时会话用量。";
 "widget.overview.name" = "用量概览";
 "widget.overview.desc" = "所有显示的配置文件的会话及每周用量。";
+
+"widget.tools" = "工具调用";
+"widget.quota" = "Quota";

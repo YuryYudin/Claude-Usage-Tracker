@@ -80,7 +80,8 @@ final class CodexAuthService {
     }
 
     func authFileExists() -> Bool {
-        FileManager.default.fileExists(atPath: authFileURL().path)
+        guard !AppEnvironment.isTesting else { return false }
+        return FileManager.default.fileExists(atPath: authFileURL().path)
     }
 
     // MARK: - Loading
@@ -175,30 +176,14 @@ final class CodexAuthService {
         // token family — which would log out the user's Codex CLI. Concurrent
         // callers (background refresh + Test Connection, or two profiles
         // sharing auth.json) join the same in-flight task instead.
-        let refreshTask: Task<CodexCredentials, Error> = await MainActor.run {
-            if let existing = inflightRefreshes[credentials.refreshToken] {
-                return existing
-            }
-            let task = Task<CodexCredentials, Error> {
-                defer {
-                    Task { @MainActor in
-                        self.inflightRefreshes.removeValue(forKey: credentials.refreshToken)
-                    }
-                }
-                let refreshed = try await self.refresh(credentials)
-                self.persistRefreshed(refreshed, for: profile)
-                return refreshed
-            }
-            inflightRefreshes[credentials.refreshToken] = task
-            return task
-        }
-
-        return try await refreshTask.value
+        let refreshed = try await refreshCoordinator.refresh(credentials)
+        try await persistRefreshed(refreshed, for: profile, original: credentials)
+        return refreshed
     }
 
-    /// In-flight refresh tasks keyed by the refresh token being rotated.
-    /// MainActor-confined for exclusive access.
-    @MainActor private var inflightRefreshes: [String: Task<CodexCredentials, Error>] = [:]
+    @MainActor private lazy var refreshCoordinator = CodexTokenRefreshCoordinator(fetch: { [unowned self] in
+        try await self.refresh($0)
+    })
 
     private func refresh(_ credentials: CodexCredentials) async throws -> CodexCredentials {
         var request = URLRequest(
@@ -288,32 +273,27 @@ final class CodexAuthService {
 
     // MARK: - Persisting refreshed tokens
 
-    private func persistRefreshed(_ credentials: CodexCredentials, for profile: Profile) {
-        if profile.codexCredentialsJSON != nil {
-            // Manual-paste profile: persist to the profile's keychain field.
-            // Serialization failure must NOT nil out the stored credentials,
-            // and the write must patch the CURRENT profile (looked up by id
-            // on the main actor) — `profile` is a value-type snapshot taken
-            // before the network refresh, and writing it back wholesale would
-            // clobber any name/settings edits made while the refresh was in
-            // flight.
-            guard let serialized = Self.serializeAuthJSON(credentials, mergingInto: profile.codexCredentialsJSON) else {
-                LoggingService.shared.logError("Codex: failed to serialize refreshed tokens; keeping stored credentials")
-                return
-            }
-            let profileId = profile.id
-            Task { @MainActor in
-                guard var current = ProfileManager.shared.profiles.first(where: { $0.id == profileId }) else { return }
+    private func persistRefreshed(_ credentials: CodexCredentials, for profile: Profile,
+                                  original: CodexCredentials) async throws {
+        if let originalJSON = profile.codexCredentialsJSON {
+            let saved = await MainActor.run { () -> Bool in
+                guard var current = ProfileManager.shared.profiles.first(where: { $0.id == profile.id }),
+                      current.provider == .codex, current.codexConfiguration == nil else { return false }
+                if current.codexCredentialsJSON != originalJSON {
+                    return current.codexCredentialsJSON.flatMap { Self.parse(Data($0.utf8)) }?.refreshToken == credentials.refreshToken
+                }
+                guard let serialized = Self.serializeAuthJSON(credentials, mergingInto: originalJSON) else { return false }
                 current.codexCredentialsJSON = serialized
-                ProfileManager.shared.updateProfile(current)
+                return ProfileManager.shared.updateProfile(current)
             }
+            guard saved else { throw CancellationError() }
         } else {
-            // File-based profile: write back to auth.json like the Codex CLI does.
-            do {
-                try writeBackToAuthFile(credentials)
-            } catch {
-                LoggingService.shared.logError("Codex: failed to write refreshed tokens to auth.json (non-fatal)", error: error)
+            // A different CLI login must never receive an old request's rotated tokens.
+            let current = try loadFromAuthFile()
+            guard current.refreshToken == original.refreshToken || current.refreshToken == credentials.refreshToken else {
+                throw CancellationError()
             }
+            try writeBackToAuthFile(credentials)
         }
     }
 

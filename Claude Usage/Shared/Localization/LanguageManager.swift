@@ -15,14 +15,14 @@ class LanguageManager: ObservableObject {
 
     @Published var currentLanguage: SupportedLanguage {
         didSet {
-            UserDefaults.standard.set(currentLanguage.code, forKey: Constants.UserDefaultsKeys.appLanguage)
+            UserDefaults.appStorage.set(currentLanguage.code, forKey: Constants.UserDefaultsKeys.appLanguage)
             applyLanguage()
         }
     }
 
     private init() {
         // Load saved language or use system default
-        if let savedCode = UserDefaults.standard.string(forKey: Constants.UserDefaultsKeys.appLanguage),
+        if let savedCode = UserDefaults.appStorage.string(forKey: Constants.UserDefaultsKeys.appLanguage),
            let language = SupportedLanguage(rawValue: savedCode) {
             currentLanguage = language
         } else {
@@ -41,8 +41,8 @@ class LanguageManager: ObservableObject {
 
     /// Apply the selected language to the app
     private func applyLanguage() {
-        UserDefaults.standard.set([currentLanguage.code], forKey: "AppleLanguages")
-        UserDefaults.standard.synchronize()
+        UserDefaults.appStorage.set([currentLanguage.code], forKey: "AppleLanguages")
+        UserDefaults.appStorage.synchronize()
 
         // Post notification for views that need to refresh
         NotificationCenter.default.post(name: .languageChanged, object: nil)

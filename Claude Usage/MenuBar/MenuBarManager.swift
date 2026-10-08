@@ -3,6 +3,22 @@ import SwiftUI
 import Combine
 
 class MenuBarManager: NSObject, ObservableObject {
+    static weak var current: MenuBarManager?
+    private let profileRefresh = ProfileRefreshCoordinator()
+    private var inactiveRefreshTimer: Timer?
+    private var inactiveRefreshRunning = false
+    private var refreshEpochs: [UUID: UUID] = [:]
+    @Published private(set) var providerStatuses: [Provider: ClaudeStatus] = [:]
+    @Published private(set) var providerErrors: [UUID: String] = [:]
+    @Published private(set) var providerFailures: [UUID: Int] = [:]
+    @Published private(set) var providerCredentialErrors: Set<UUID> = []
+    var isCodexRefreshing: Bool { profileManager.activeProfile.map { profileRefresh.isRefreshing($0.id) } ?? false }
+    var isZAIRefreshing: Bool { isCodexRefreshing }
+    var codexRefreshError: String? { profileManager.activeProfile.flatMap { providerErrors[$0.id] } }
+    var zaiRefreshError: String? { codexRefreshError }
+    func refreshCodexUsageNow() { refreshUsage() }
+    func refreshZAIUsageNow() { refreshUsage() }
+
     private var statusItem: NSStatusItem?  // Legacy - kept for backwards compatibility
     private var statusBarUIManager: StatusBarUIManager?
     private var refreshTimer: Timer?
@@ -119,6 +135,17 @@ class MenuBarManager: NSObject, ObservableObject {
     private var cachedIsDarkMode: Bool = false
 
     func setup() {
+        Self.current = self
+        inactiveRefreshTimer?.invalidate()
+        inactiveRefreshTimer = Timer.scheduledTimer(withTimeInterval: 300, repeats: true) { [weak self] _ in
+            guard let manager = self else { return }
+            Task { @MainActor in manager.refreshInactiveDisplayedProfiles() }
+        }
+        refreshInactiveDisplayedProfiles()
+        for name in [Notification.Name.codexSettingsChanged, .zaiSettingsChanged] {
+            NotificationCenter.default.removeObserver(self, name: name, object: nil)
+            NotificationCenter.default.addObserver(self, selector: #selector(providerConfigurationChanged), name: name, object: nil)
+        }
         // Initialize cached appearance to avoid layout recursion
         cachedIsDarkMode = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
 
@@ -259,6 +286,10 @@ class MenuBarManager: NSObject, ObservableObject {
     }
 
     func cleanup() {
+        inactiveRefreshTimer?.invalidate()
+        inactiveRefreshTimer = nil
+        NotificationCenter.default.removeObserver(self, name: .codexSettingsChanged, object: nil)
+        NotificationCenter.default.removeObserver(self, name: .zaiSettingsChanged, object: nil)
         ShortcutManager.shared.stopListening()
         refreshTimer?.invalidate()
         refreshTimer = nil
@@ -302,6 +333,7 @@ class MenuBarManager: NSObject, ObservableObject {
         detachedWindow?.close()
         detachedWindow = nil
         statusItem = nil
+        CodexAppServerProvider.shared.retainClients(for: [])
         statusBarUIManager?.cleanup()
         statusBarUIManager = nil
 
@@ -319,11 +351,21 @@ class MenuBarManager: NSObject, ObservableObject {
         lastKnownAPIResetTime.removeValue(forKey: profileId)
         resetJustRecorded.removeValue(forKey: profileId)
         autoSwitchedProfileIds.remove(profileId)
+        providerErrors.removeValue(forKey: profileId)
+        providerFailures.removeValue(forKey: profileId)
+        providerCredentialErrors.remove(profileId)
+        refreshEpochs.removeValue(forKey: profileId)
+        publishWidgetSnapshot()
     }
 
     // MARK: - Profile Observation
 
     private func observeProfileChanges() {
+        profileManager.$profiles
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.publishWidgetSnapshot() }
+            .store(in: &cancellables)
+
         // Store the initial profile ID to skip only the very first startup update
         let initialProfileId = profileManager.activeProfile?.id
 
@@ -363,6 +405,12 @@ class MenuBarManager: NSObject, ObservableObject {
 
     private func handleProfileSwitch(to profile: Profile) async {
         LoggingService.shared.log("MenuBarManager: Handling profile switch to: \(profile.name)")
+        lastRefreshError = providerErrors[profile.id]
+        consecutiveRefreshFailures = providerFailures[profile.id] ?? 0
+        hasCredentialError = providerCredentialErrors.contains(profile.id)
+        lastSuccessfulRefreshTime = profile.claudeUsage?.lastUpdated
+        status = providerStatuses[profile.provider] ?? .unknown
+
 
         // 1. Load saved data from new profile (for immediate display)
         await MainActor.run {
@@ -506,7 +554,7 @@ class MenuBarManager: NSObject, ObservableObject {
         let contentView = PopoverContentView(
             manager: self,
             onRefresh: { [weak self] in
-                self?.refreshUsage()
+                self?.refreshViewedProfile()
             },
             onPreferences: { [weak self] in
                 self?.closePopoverOrWindow()
@@ -710,7 +758,7 @@ class MenuBarManager: NSObject, ObservableObject {
         } else {
             // Single profile mode - use the standard update
             statusBarUIManager?.updateAllButtons(
-                usage: usage,
+                usage: usage.trayUsage,
                 apiUsage: apiUsage
             )
         }
@@ -720,7 +768,7 @@ class MenuBarManager: NSObject, ObservableObject {
     private func updateStatusBarIcon(for metricType: MenuBarMetricType) {
         statusBarUIManager?.updateButton(
             for: metricType,
-            usage: usage,
+            usage: usage.trayUsage,
             apiUsage: apiUsage
         )
     }
@@ -997,155 +1045,143 @@ class MenuBarManager: NSObject, ObservableObject {
         LoggingService.shared.log("MenuBarManager: Multi-profile display updated incrementally with \(selectedProfiles.count) profiles")
     }
 
-    /// Refreshes usage data for all profiles selected for multi-profile display
-    private func refreshAllSelectedProfiles() {
-        // Filter on `hasAnyCredentials` (not `hasUsageCredentials`) so that profiles
-        // whose CLI OAuth token has expired are still polled — `fetchUsageForProfile`
-        // will transparently refresh expired tokens via the refresh_token grant.
-        // Excluding them here would prevent the refresh path from ever running.
-        let selectedProfiles = profileManager.profiles.filter { $0.isSelectedForDisplay && $0.hasAnyCredentials }
-
-        guard !selectedProfiles.isEmpty else {
-            LoggingService.shared.log("MenuBarManager: No selected profiles with usage credentials to refresh")
-            updateAllStatusBarIcons()
-            return
+    @objc private func providerConfigurationChanged() {
+        guard var profile = profileManager.activeProfile else { return }
+        if let details = profile.codexUsage, let config = profile.codexConfiguration {
+            profile.claudeUsage = details.sharedUsage(configuration: config)
+        } else if let details = profile.zaiUsage {
+            profile.claudeUsage = details.sharedUsage(configuration: profile.zaiConfiguration)
         }
+        profileManager.updateProfile(profile)
+        usage = profile.claudeUsage ?? .empty
+        WidgetSnapshotService.shared.publish(profiles: profileManager.profiles, activeProfileId: profile.id)
+        updateAllStatusBarIcons()
+        refreshUsage()
+    }
 
-        LoggingService.shared.log("MenuBarManager: Refreshing \(selectedProfiles.count) selected profiles for multi-profile mode")
-
+    private func refreshAllSelectedProfiles() {
+        let profiles = profileManager.profiles.filter { $0.isSelectedForDisplay && $0.hasAnyCredentials }
         Task {
-            await MainActor.run {
-                self.isRefreshing = true
-            }
-
-            // Fetch Claude status (same as single profile mode)
-            do {
-                let newStatus = try await statusServiceForActiveProfile.fetchStatus()
-                await MainActor.run {
-                    self.status = newStatus
-                }
-            } catch {
-                let appError = AppError.wrap(error)
-                LoggingService.shared.log("MenuBarManager: Failed to fetch status - [\(appError.code.rawValue)] \(appError.message)")
-            }
-
-            // Fetch usage for each selected profile
-            for profile in selectedProfiles {
-                LoggingService.shared.log("MenuBarManager: Fetching usage for profile '\(profile.name)'")
-
-                // Capture previous usage for reset detection
-                let previousUsage = profile.claudeUsage
-
-                do {
-                    let newUsage = try await fetchUsageForProfile(profile)
-
-                    await MainActor.run {
-                        // Check for resets before updating usage
-                        self.checkAndRecordSessionReset(
-                            profileId: profile.id,
-                            previousUsage: previousUsage,
-                            newUsage: newUsage
-                        )
-                        self.checkAndRecordWeeklyReset(
-                            profileId: profile.id,
-                            previousUsage: previousUsage,
-                            newUsage: newUsage
-                        )
-
-                        // Record periodic snapshots for history charts (skip if reset just occurred)
-                        let flags = self.resetJustRecorded[profile.id] ?? (session: false, weekly: false)
-
-                        if !flags.session {
-                            UsageHistoryService.shared.recordSessionPeriodic(for: profile.id, usage: newUsage, provider: profile.provider)
-                        }
-
-                        if !flags.weekly {
-                            UsageHistoryService.shared.recordWeeklyPeriodic(for: profile.id, usage: newUsage, provider: profile.provider)
-                        }
-
-                        // Clear reset flags for next cycle
-                        self.resetJustRecorded[profile.id] = (session: false, weekly: false)
-
-                        // Save to profile
-                        self.profileManager.saveClaudeUsage(newUsage, for: profile.id)
-                        LoggingService.shared.log("MenuBarManager: Saved usage for profile '\(profile.name)' - session: \(newUsage.sessionPercentage)%")
-
-                        // If this is the active profile, also update the manager's usage
-                        if profile.id == self.profileManager.activeProfile?.id {
-                            self.usage = newUsage
-
-                            // Write statusline cache for instant CLI rendering (Claude Code only)
-                            if profile.provider.descriptor.capabilities.cliAccountSync,
-                               StatuslineService.shared.isInstalled {
-                                StatuslineService.shared.writeUsageCache(
-                                    usage: newUsage,
-                                    profileName: profile.name
-                                )
-                            }
-                        }
-                    }
-                } catch {
-                    LoggingService.shared.logError("Failed to refresh profile '\(profile.name)': \(error.localizedDescription)")
-                }
-
-                // Fetch API usage if this profile's provider has console billing
-                // and the profile has API console credentials
-                if profile.provider.descriptor.capabilities.consoleBilling,
-                   let apiSessionKey = profile.apiSessionKey,
-                   let orgId = profile.apiOrganizationId {
-                    do {
-                        let previousAPIUsage = profile.apiUsage
-                        let newAPIUsage = try await apiService.fetchAPIUsageData(organizationId: orgId, apiSessionKey: apiSessionKey)
-                        await MainActor.run {
-                            self.checkAndRecordBillingCycleReset(
-                                profileId: profile.id,
-                                previousUsage: previousAPIUsage,
-                                newUsage: newAPIUsage
-                            )
-                            self.profileManager.saveAPIUsage(newAPIUsage, for: profile.id)
-                            if profile.id == self.profileManager.activeProfile?.id {
-                                self.apiUsage = newAPIUsage
-                            }
-                        }
-                    } catch {
-                        LoggingService.shared.logError("Failed to refresh API usage for profile '\(profile.name)': \(error.localizedDescription)")
-                    }
-                }
-            }
-
-            // Update all icons once after all profiles are refreshed
-            await MainActor.run {
-                let config = self.profileManager.multiProfileConfig
-                self.statusBarUIManager?.updateMultiProfileButtons(
-                    profiles: self.profileManager.profiles,
-                    config: config,
-                    activeProfileId: self.profileManager.activeProfile?.id
-                )
-                self.consecutiveRefreshFailures = 0
-                self.lastRefreshError = nil
-                self.hasCredentialError = false
-                self.lastSuccessfulRefreshTime = Date()
-                self.isRefreshing = false
-
-                WidgetSnapshotService.shared.publish(
-                    profiles: self.profileManager.profiles,
-                    activeProfileId: self.profileManager.activeProfile?.id
-                )
-
-                // Check auto-switch for the active profile
-                if let activeProfile = self.profileManager.activeProfile,
-                   let activeUsage = activeProfile.claudeUsage {
-                    self.checkAutoSwitchIfNeeded(usage: activeUsage, currentProfile: activeProfile)
-                }
-            }
+            for profile in profiles { await refreshProfile(profile) }
+            updateAllStatusBarIcons()
+            publishWidgetSnapshot()
         }
     }
 
-    /// Fetches usage data for a specific profile using its provider's service.
-    /// (The Anthropic 3-source chain that used to live here moved verbatim to
-    /// `AnthropicUsageProvider.fetchUsage(for:)`.)
-    private func fetchUsageForProfile(_ profile: Profile) async throws -> ClaudeUsage {
-        try await ProviderRegistry.service(for: profile.provider).fetchUsage(for: profile)
+    private func refreshInactiveDisplayedProfiles() {
+        guard profileManager.displayMode == .single, !inactiveRefreshRunning else { return }
+        let activeID = profileManager.activeProfile?.id
+        let profiles = ProfileRefreshPolicy.inactiveDisplayed(profileManager.profiles, activeID: activeID)
+        guard !profiles.isEmpty else { return }
+        inactiveRefreshRunning = true
+        Task {
+            defer { inactiveRefreshRunning = false }
+            for profile in profiles { await refreshProfile(profile) }
+            publishWidgetSnapshot()
+        }
+    }
+
+    private func publishWidgetSnapshot() {
+        CodexAppServerProvider.shared.retainClients(for: profileManager.profiles)
+        WidgetSnapshotService.shared.publish(profiles: profileManager.profiles,
+                                             activeProfileId: profileManager.activeProfile?.id)
+    }
+
+    private func matches(_ identity: ProfileAccountIdentity) -> Bool {
+        guard let profile = profileManager.profiles.first(where: { $0.id == identity.id }) else { return false }
+        return ProfileAccountIdentity(profile) == identity
+    }
+
+    private func refreshProfile(_ source: Profile) async {
+        let identity = ProfileAccountIdentity(source)
+        let epoch = UUID()
+        refreshEpochs[source.id] = epoch
+        func valid() -> Bool { refreshEpochs[source.id] == epoch && matches(identity) }
+        let active = profileManager.activeProfile?.id == source.id
+        isRefreshing = true
+        let outcome = await profileRefresh.refresh(source, active: active, isCurrent: { _ in valid() })
+        isRefreshing = profileRefresh.isRefreshing
+        switch outcome {
+        case .superseded: return
+        case .failed(let error):
+            providerErrors[source.id] = error.localizedDescription
+            providerFailures[source.id, default: 0] += 1
+            let code = AppError.wrap(error).code
+            if code == .providerAuthExpired || code == .providerCredentialsNotFound
+                || code == .apiUnauthorized || code == .sessionKeyExpired || code == .sessionKeyNotFound {
+                providerCredentialErrors.insert(source.id)
+            } else { providerCredentialErrors.remove(source.id) }
+            if profileManager.activeProfile?.id == source.id {
+                consecutiveRefreshFailures = providerFailures[source.id] ?? 0
+                lastRefreshError = error.localizedDescription
+                hasCredentialError = providerCredentialErrors.contains(source.id)
+                ErrorRecovery.shared.recordFailure(for: .api)
+            }
+            publishWidgetSnapshot()
+            return
+        case .updated(let result):
+            guard var current = profileManager.profiles.first(where: { $0.id == source.id }), valid() else { return }
+            let previous = current.claudeUsage
+            result.updateDetails(&current)
+            let newUsage = result.projectUsage?(current) ?? result.usage
+            current.claudeUsage = newUsage
+            guard profileManager.updateProfile(current) else { return }
+            let isNewSample = previous?.lastUpdated != newUsage.lastUpdated
+            resetJustRecorded[source.id] = (false, false)
+            if isNewSample && newUsage.sessionAvailable != false {
+                checkAndRecordSessionReset(profileId: source.id, previousUsage: previous, newUsage: newUsage)
+                if resetJustRecorded[source.id]?.session != true {
+                    UsageHistoryService.shared.recordSessionPeriodic(for: source.id, usage: newUsage, provider: source.provider)
+                }
+            }
+            if isNewSample && newUsage.weeklyAvailable != false {
+                checkAndRecordWeeklyReset(profileId: source.id, previousUsage: previous, newUsage: newUsage)
+                if resetJustRecorded[source.id]?.weekly != true {
+                    UsageHistoryService.shared.recordWeeklyPeriodic(for: source.id, usage: newUsage, provider: source.provider)
+                }
+            }
+            providerErrors.removeValue(forKey: source.id)
+            providerFailures.removeValue(forKey: source.id)
+            providerCredentialErrors.remove(source.id)
+            if isNewSample {
+                NotificationManager.shared.checkAndNotify(usage: newUsage, profileID: current.id,
+                    profileName: current.name, settings: current.notificationSettings)
+            }
+            if profileManager.activeProfile?.id == source.id {
+                usage = newUsage
+                consecutiveRefreshFailures = 0
+                lastRefreshError = nil
+                hasCredentialError = false
+                lastSuccessfulRefreshTime = newUsage.lastUpdated
+                ErrorRecovery.shared.recordSuccess(for: .api)
+                if current.provider.descriptor.capabilities.cliAccountSync && StatuslineService.shared.isInstalled {
+                    StatuslineService.shared.writeUsageCache(usage: newUsage, profileName: current.name)
+                }
+                checkAutoSwitchIfNeeded(usage: newUsage, currentProfile: current)
+            }
+            updateAllStatusBarIcons()
+            publishWidgetSnapshot()
+        }
+
+        // Billing belongs to the captured account, even if the active profile changes.
+        if source.provider.descriptor.capabilities.consoleBilling,
+           let key = source.apiSessionKey, let org = source.apiOrganizationId {
+            do {
+                let billing = try await apiService.fetchAPIUsageData(organizationId: org, apiSessionKey: key)
+                guard valid() else { return }
+                checkAndRecordBillingCycleReset(profileId: source.id, previousUsage: source.apiUsage, newUsage: billing)
+                profileManager.saveAPIUsage(billing, for: source.id)
+                if profileManager.activeProfile?.id == source.id { apiUsage = billing }
+            } catch { LoggingService.shared.logAPIError("profile billing", error: error) }
+        }
+        if active || providerStatuses[source.provider] == nil {
+            do {
+                let serviceStatus = try await ProviderRegistry.service(for: source.provider).fetchStatus()
+                guard valid(), let serviceStatus else { return }
+                providerStatuses[source.provider] = serviceStatus
+                if profileManager.activeProfile?.id == source.id { status = serviceStatus }
+            } catch { LoggingService.shared.logAPIError("provider status", error: error) }
+        }
     }
 
     private func setupSingleProfileMode() {
@@ -1181,214 +1217,24 @@ class MenuBarManager: NSObject, ObservableObject {
         LoggingService.shared.log("MenuBarManager: Single profile mode enabled")
     }
 
+    private func refreshViewedProfile() {
+        guard let id = clickedProfileId,
+              let profile = profileManager.profiles.first(where: { $0.id == id }) else {
+            refreshUsage()
+            return
+        }
+        Task { await refreshProfile(profile) }
+    }
+
     func refreshUsage() {
-        // In multi-profile mode, refresh ALL selected profiles
-        if profileManager.displayMode == .multi {
-            refreshAllSelectedProfiles()
-            return
-        }
-
-        // Single profile mode - refresh only active profile
-        guard let profile = profileManager.activeProfile else {
-            LoggingService.shared.log("MenuBarManager.refreshUsage: No active profile")
-            return
-        }
-
-        // Detailed logging
-        LoggingService.shared.log("MenuBarManager.refreshUsage called:")
-        LoggingService.shared.log("  - Profile: '\(profile.name)'")
-        LoggingService.shared.log("  - hasUsageCredentials: \(profile.hasUsageCredentials)")
-
-        // Check for ANY available credentials, including system Keychain CLI fallback.
-        // Without this fallback, users who only authenticated via `claude login`
-        // would be gated off here before ClaudeAPIService.getAuthentication() could
-        // discover their system-level credentials.
-        guard hasAnyAvailableCredentials() else {
-            LoggingService.shared.log("MenuBarManager: Skipping refresh - no credentials available (profile or system keychain)")
-            // Update icons to show default logo if needed
+        if profileManager.displayMode == .multi { refreshAllSelectedProfiles(); return }
+        guard let profile = profileManager.activeProfile else { return }
+        guard ProviderRegistry.service(for: profile.provider).hasCredentials(for: profile) else {
+            publishWidgetSnapshot()
             updateAllStatusBarIcons()
             return
         }
-
-        LoggingService.shared.log("MenuBarManager: Proceeding with refresh")
-        Task {
-            // Set loading state (keep existing data visible during refresh)
-            await MainActor.run {
-                self.isRefreshing = true
-            }
-
-            // Capture previous usage BEFORE fetching new data (for reset detection)
-            let previousUsage = await MainActor.run { self.usage }
-            let previousAPIUsage = await MainActor.run { self.apiUsage }
-            let currentProfileId = await MainActor.run { self.profileManager.activeProfile?.id }
-
-            // Fetch usage and status in parallel (usage via the profile's provider;
-            // for Anthropic this is the same no-arg fetchUsageData() chain as before)
-            let providerService = ProviderRegistry.service(for: profile.provider)
-            async let usageResult = providerService.fetchUsageForActiveProfile(profile)
-            async let statusResult = statusServiceForActiveProfile.fetchStatus()
-
-            var usageSuccess = false
-
-            // Fetch usage with proper error handling
-            do {
-                let newUsage = try await usageResult
-
-                await MainActor.run {
-                    // Check for resets before updating usage
-                    if let profileId = currentProfileId {
-                        self.checkAndRecordSessionReset(
-                            profileId: profileId,
-                            previousUsage: previousUsage,
-                            newUsage: newUsage
-                        )
-                        self.checkAndRecordWeeklyReset(
-                            profileId: profileId,
-                            previousUsage: previousUsage,
-                            newUsage: newUsage
-                        )
-
-                        // Record periodic snapshots for history charts
-                        UsageHistoryService.shared.recordSessionPeriodic(for: profileId, usage: newUsage, provider: profile.provider)
-                        UsageHistoryService.shared.recordWeeklyPeriodic(for: profileId, usage: newUsage, provider: profile.provider)
-                    }
-
-                    self.usage = newUsage
-
-                    // Save to active profile instead of global DataStore
-                    if let profileId = self.profileManager.activeProfile?.id {
-                        self.profileManager.saveClaudeUsage(newUsage, for: profileId)
-                    }
-
-                    // Write statusline cache for instant CLI rendering (Claude Code only)
-                    if profile.provider.descriptor.capabilities.cliAccountSync,
-                       StatuslineService.shared.isInstalled {
-                        StatuslineService.shared.writeUsageCache(
-                            usage: newUsage,
-                            profileName: self.profileManager.activeProfile?.name
-                        )
-                    }
-
-                    // Update all menu bar icons
-                    self.updateAllStatusBarIcons()
-
-                    // Check if we should send notifications (using active profile's settings)
-                    if let profile = self.profileManager.activeProfile {
-                        NotificationManager.shared.checkAndNotify(
-                            usage: newUsage,
-                            profileName: profile.name,
-                            settings: profile.notificationSettings
-                        )
-
-                        // Check if auto-switch should trigger
-                        self.checkAutoSwitchIfNeeded(usage: newUsage, currentProfile: profile)
-                    }
-                }
-
-                // Record success for circuit breaker
-                ErrorRecovery.shared.recordSuccess(for: .api)
-                usageSuccess = true
-
-                await MainActor.run {
-                    self.consecutiveRefreshFailures = 0
-                    self.lastRefreshError = nil
-                    self.hasCredentialError = false
-                    self.lastSuccessfulRefreshTime = Date()
-
-                    WidgetSnapshotService.shared.publish(
-                        profiles: self.profileManager.profiles,
-                        activeProfileId: self.profileManager.activeProfile?.id
-                    )
-                }
-
-            } catch {
-                // Convert to AppError and log
-                let appError = AppError.wrap(error)
-                ErrorLogger.shared.log(appError, severity: .error)
-
-                // Record failure for circuit breaker
-                ErrorRecovery.shared.recordFailure(for: .api)
-
-                // Track error state for UI banners
-                await MainActor.run {
-                    self.consecutiveRefreshFailures += 1
-                    self.lastRefreshError = appError.message
-
-                    // Track credential errors specifically
-                    if appError.code == .apiUnauthorized || appError.code == .sessionKeyExpired {
-                        self.hasCredentialError = true
-                    }
-
-                    // Check if this refresh was triggered within last 5 seconds
-                    // (indicates user-initiated action like saving session key)
-                    if abs(self.lastRefreshTriggerTime.timeIntervalSinceNow) < 5 {
-                        ErrorPresenter.shared.showAlert(for: appError)
-                    } else {
-                        // Background refresh - just log
-                        LoggingService.shared.logError("MenuBarManager: Failed to fetch usage - [\(appError.code.rawValue)] \(appError.message)")
-                    }
-                }
-            }
-
-            // Fetch status separately (don't fail if usage fetch works)
-            do {
-                let newStatus = try await statusResult
-                await MainActor.run {
-                    self.status = newStatus
-                }
-            } catch {
-                // Convert to AppError and log
-                let appError = AppError.wrap(error)
-                ErrorLogger.shared.log(appError, severity: .info)
-
-                // Don't show error for status - it's not critical
-                LoggingService.shared.log("MenuBarManager: Failed to fetch status - [\(appError.code.rawValue)] \(appError.message)")
-            }
-
-            // Fetch API usage (using active profile's API credentials; console
-            // billing is provider-gated)
-            if let profile = await MainActor.run(body: { self.profileManager.activeProfile }),
-               profile.provider.descriptor.capabilities.consoleBilling,
-               let apiSessionKey = profile.apiSessionKey,
-               let orgId = profile.apiOrganizationId {
-                do {
-                    let newAPIUsage = try await apiService.fetchAPIUsageData(organizationId: orgId, apiSessionKey: apiSessionKey)
-                    await MainActor.run {
-                        // Check for billing cycle reset before updating usage
-                        if let profileId = currentProfileId {
-                            self.checkAndRecordBillingCycleReset(
-                                profileId: profileId,
-                                previousUsage: previousAPIUsage,
-                                newUsage: newAPIUsage
-                            )
-                        }
-
-                        self.apiUsage = newAPIUsage
-
-                        // Save to active profile instead of global DataStore
-                        if let profileId = self.profileManager.activeProfile?.id {
-                            self.profileManager.saveAPIUsage(newAPIUsage, for: profileId)
-                        }
-                    }
-                } catch {
-                    // Convert to AppError and log
-                    let appError = AppError.wrap(error)
-                    ErrorLogger.shared.log(appError, severity: .info)
-
-                    LoggingService.shared.log("MenuBarManager: Failed to fetch API usage - [\(appError.code.rawValue)] \(appError.message)")
-                }
-            }
-
-            // Clear loading state
-            await MainActor.run {
-                self.isRefreshing = false
-
-                // Show success notification if this was user-triggered and successful
-                if usageSuccess && abs(self.lastRefreshTriggerTime.timeIntervalSinceNow) < 5 {
-                    self.showSuccessNotification()
-                }
-            }
-        }
+        Task { await refreshProfile(profile) }
     }
 
     /// Shows a brief success notification for user-triggered refreshes
@@ -1400,6 +1246,7 @@ class MenuBarManager: NSObject, ObservableObject {
 
     /// Checks if the current profile hit 100% and switches to the next available one
     private func checkAutoSwitchIfNeeded(usage: ClaudeUsage, currentProfile: Profile) {
+        guard currentProfile.provider.descriptor.capabilities.cliAccountSync else { return }
         // Guard: feature must be enabled
         guard SharedDataStore.shared.loadAutoSwitchProfileEnabled() else { return }
 
@@ -1455,27 +1302,7 @@ class MenuBarManager: NSObject, ObservableObject {
 
     /// Finds the next profile with available session capacity, wrapping around
     private func findNextAvailableProfile(after currentProfile: Profile) -> Profile? {
-        let profiles = profileManager.profiles
-        guard let currentIndex = profiles.firstIndex(where: { $0.id == currentProfile.id }) else { return nil }
-
-        let count = profiles.count
-        for offset in 1..<count {
-            let index = (currentIndex + offset) % count
-            let candidate = profiles[index]
-
-            // Must have usage credentials
-            guard candidate.hasUsageCredentials else { continue }
-
-            // If no saved usage data, treat as available
-            guard let candidateUsage = candidate.claudeUsage else { return candidate }
-
-            // Must be below 100%
-            if candidateUsage.effectiveSessionPercentage < 100.0 {
-                return candidate
-            }
-        }
-
-        return nil
+        ProfileRefreshPolicy.autoSwitchCandidate(profileManager.profiles, after: currentProfile)
     }
 
     // MARK: - Reset Detection for History Recording
@@ -1493,6 +1320,8 @@ class MenuBarManager: NSObject, ObservableObject {
         previousUsage: ClaudeUsage?,
         newUsage: ClaudeUsage
     ) {
+        if let quotas = newUsage.quotaWindows,
+           !quotas.contains(where: { $0.role == .session && $0.resetTime != nil }) { return }
         let lastKnown = lastKnownSessionResetTime[profileId]
         let newResetTime = normalizeToMinute(newUsage.sessionResetTime)
 
@@ -1512,14 +1341,12 @@ class MenuBarManager: NSObject, ObservableObject {
             LoggingService.shared.log("History: Session reset detected for profile \(profileId.uuidString.prefix(8)). Old: \(normalizedLastKnown), New: \(newResetTime)")
             if let prevUsage = previousUsage {
                 let provider = profileManager.profiles.first(where: { $0.id == profileId })?.provider ?? .anthropic
-                Task { @MainActor in
-                    UsageHistoryService.shared.recordSessionReset(
-                        for: profileId,
-                        previousUsage: prevUsage,
-                        resetTime: prevUsage.sessionResetTime,  // Use original reset time, not normalized
-                        provider: provider
-                    )
-                }
+                UsageHistoryService.shared.recordSessionReset(
+                    for: profileId,
+                    previousUsage: prevUsage,
+                    resetTime: prevUsage.sessionResetTime,  // Use original reset time, not normalized
+                    provider: provider
+                )
             }
 
             // Mark that session reset was just recorded to prevent duplicate periodic snapshot
@@ -1538,6 +1365,8 @@ class MenuBarManager: NSObject, ObservableObject {
         previousUsage: ClaudeUsage?,
         newUsage: ClaudeUsage
     ) {
+        if let quotas = newUsage.quotaWindows,
+           !quotas.contains(where: { $0.role == .weekly && $0.resetTime != nil }) { return }
         let lastKnown = lastKnownWeeklyResetTime[profileId]
         let newResetTime = normalizeToMinute(newUsage.weeklyResetTime)
 
@@ -1558,14 +1387,12 @@ class MenuBarManager: NSObject, ObservableObject {
             LoggingService.shared.log("History: Weekly reset detected for profile \(profileId.uuidString.prefix(8)). Old: \(normalizedLastKnown), New: \(newResetTime)")
             if let prevUsage = previousUsage {
                 let provider = profileManager.profiles.first(where: { $0.id == profileId })?.provider ?? .anthropic
-                Task { @MainActor in
-                    UsageHistoryService.shared.recordWeeklyReset(
-                        for: profileId,
-                        previousUsage: prevUsage,
-                        resetTime: prevUsage.weeklyResetTime,  // Use original reset time, not normalized
-                        provider: provider
-                    )
-                }
+                UsageHistoryService.shared.recordWeeklyReset(
+                    for: profileId,
+                    previousUsage: prevUsage,
+                    resetTime: prevUsage.weeklyResetTime,  // Use original reset time, not normalized
+                    provider: provider
+                )
             }
 
             // Mark that weekly reset was just recorded to prevent duplicate periodic snapshot
@@ -1603,13 +1430,11 @@ class MenuBarManager: NSObject, ObservableObject {
             // Reset detected! Record snapshot of the previous usage
             LoggingService.shared.log("History: Billing cycle reset detected for profile \(profileId.uuidString.prefix(8)). Old: \(normalizedLastKnown), New: \(newResetTime)")
             if let prevUsage = previousUsage {
-                Task { @MainActor in
-                    UsageHistoryService.shared.recordBillingCycleReset(
-                        for: profileId,
-                        previousUsage: prevUsage,
-                        resetTime: prevUsage.resetsAt  // Use original reset time, not normalized
-                    )
-                }
+                UsageHistoryService.shared.recordBillingCycleReset(
+                    for: profileId,
+                    previousUsage: prevUsage,
+                    resetTime: prevUsage.resetsAt  // Use original reset time, not normalized
+                )
             }
         }
 
@@ -1838,7 +1663,7 @@ extension MenuBarManager: NSPopoverDelegate {
         // positioning) conflict with the window's layout constraints.
         let contentView = PopoverContentView(
             manager: self,
-            onRefresh: { [weak self] in self?.refreshUsage() },
+            onRefresh: { [weak self] in self?.refreshViewedProfile() },
             onPreferences: { [weak self] in
                 self?.closePopoverOrWindow()
                 self?.preferencesClicked()

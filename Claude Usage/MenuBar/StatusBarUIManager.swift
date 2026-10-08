@@ -362,7 +362,7 @@ final class StatusBarUIManager {
             let menuBarIsDark = button.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
 
             // Get usage data for this profile
-            let usage = profile.claudeUsage ?? ClaudeUsage.empty
+            let usage = profile.claudeUsage?.trayUsage ?? ClaudeUsage.empty
             let showRemaining = config.showRemainingPercentage
 
             // Calculate percentages

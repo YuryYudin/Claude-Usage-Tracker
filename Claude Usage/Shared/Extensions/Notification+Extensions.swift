@@ -30,3 +30,8 @@ extension Notification.Name {
     /// Posted when a Claude Code notch HUD setting is toggled (enabled/auto-hide)
     static let notchHUDSettingChanged = Notification.Name("notchHUDSettingChanged")
 }
+
+extension Notification.Name {
+    static let codexSettingsChanged = Notification.Name("codexSettingsChanged")
+    static let zaiSettingsChanged = Notification.Name("zaiSettingsChanged")
+}

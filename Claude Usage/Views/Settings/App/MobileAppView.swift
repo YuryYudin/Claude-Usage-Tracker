@@ -31,7 +31,7 @@ private let kAnalyticsOnlyEndpoint = "https://claude-usage-tracker.hamedelfayome
 /// Mobile app "coming soon" painted-door view.
 /// Collects interest via a single analytics-only POST request.
 struct MobileAppView: View {
-    @State private var hasNotified = UserDefaults.standard.bool(forKey: "mobileApp.notifyMe")
+    @State private var hasNotified = UserDefaults.appStorage.bool(forKey: "mobileApp.notifyMe")
     @State private var isSubmitting = false
     @State private var showError = false
 
@@ -144,7 +144,7 @@ struct MobileAppView: View {
                 await MainActor.run {
                     if let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) {
                         hasNotified = true
-                        UserDefaults.standard.set(true, forKey: "mobileApp.notifyMe")
+                        UserDefaults.appStorage.set(true, forKey: "mobileApp.notifyMe")
                     } else {
                         showError = true
                     }

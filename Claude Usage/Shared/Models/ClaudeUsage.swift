@@ -48,6 +48,10 @@ struct ClaudeUsage: Codable, Equatable {
     var overageBalanceCurrency: String?
 
     // Provider plan/credits (populated by providers that report them, e.g. Codex)
+    var quotaWindows: [UsageQuota]? = nil
+    var selectedQuotaID: String? = nil
+    var sessionAvailable: Bool? = nil
+    var weeklyAvailable: Bool? = nil
     var planType: String?
     var creditsBalance: Double?
     var creditsUnlimited: Bool?
@@ -141,7 +145,7 @@ extension ClaudeUsage {
         case fableWeeklyTokensUsed, fableWeeklyPercentage, fableWeeklyResetTime
         case costUsed, costLimit, costCurrency
         case overageBalance, overageBalanceCurrency
-        case planType, creditsBalance, creditsUnlimited
+        case planType, creditsBalance, creditsUnlimited, quotaWindows, selectedQuotaID, sessionAvailable, weeklyAvailable
         case lastUpdated, userTimezone
     }
 
@@ -172,6 +176,10 @@ extension ClaudeUsage {
             costCurrency: try c.decodeIfPresent(String.self, forKey: .costCurrency),
             overageBalance: try c.decodeIfPresent(Double.self, forKey: .overageBalance),
             overageBalanceCurrency: try c.decodeIfPresent(String.self, forKey: .overageBalanceCurrency),
+            quotaWindows: try c.decodeIfPresent([UsageQuota].self, forKey: .quotaWindows),
+            selectedQuotaID: try c.decodeIfPresent(String.self, forKey: .selectedQuotaID),
+            sessionAvailable: try c.decodeIfPresent(Bool.self, forKey: .sessionAvailable),
+            weeklyAvailable: try c.decodeIfPresent(Bool.self, forKey: .weeklyAvailable),
             planType: try c.decodeIfPresent(String.self, forKey: .planType),
             creditsBalance: try c.decodeIfPresent(Double.self, forKey: .creditsBalance),
             creditsUnlimited: try c.decodeIfPresent(Bool.self, forKey: .creditsUnlimited),

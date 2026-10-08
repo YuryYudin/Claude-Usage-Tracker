@@ -299,7 +299,7 @@ class ClaudeCodeSyncService {
 
         // Honor any previously persisted resolution — this avoids the expensive
         // `dump-keychain` shell-out on every launch after the first.
-        if let persisted = UserDefaults.standard.string(forKey: Self.persistedServiceNameKey),
+        if let persisted = UserDefaults.appStorage.string(forKey: Self.persistedServiceNameKey),
            !persisted.isEmpty {
             resolvedServiceName = persisted
             return persisted
@@ -314,7 +314,7 @@ class ClaudeCodeSyncService {
         // Only run the (potentially slow/hanging) hashed-name discovery ONCE
         // per machine. If we've already tried and failed, default to the legacy
         // name and let downstream callers handle the "no credentials" case.
-        let defaults = UserDefaults.standard
+        let defaults = UserDefaults.appStorage
         if defaults.bool(forKey: Self.discoveryAttemptedKey) {
             resolvedServiceName = Self.legacyServiceName
             return Self.legacyServiceName
@@ -339,7 +339,7 @@ class ClaudeCodeSyncService {
     /// Persists a successfully resolved service name to UserDefaults and in-memory cache.
     private func persistResolvedServiceName(_ name: String) {
         resolvedServiceName = name
-        UserDefaults.standard.set(name, forKey: Self.persistedServiceNameKey)
+        UserDefaults.appStorage.set(name, forKey: Self.persistedServiceNameKey)
     }
 
     /// Checks if a keychain item exists with the given service name, bounded by
@@ -580,7 +580,7 @@ class ClaudeCodeSyncService {
     /// so a subsequent call will re-run the full resolution chain.
     func invalidateServiceNameCache() {
         resolvedServiceName = nil
-        let defaults = UserDefaults.standard
+        let defaults = UserDefaults.appStorage
         defaults.removeObject(forKey: Self.persistedServiceNameKey)
         defaults.removeObject(forKey: Self.discoveryAttemptedKey)
     }
@@ -957,7 +957,15 @@ class ClaudeCodeSyncService {
     }
 
     /// Posts the `refresh_token` grant to platform.claude.com and decodes the response.
+    @MainActor private let oauthRotations = OAuthRefreshCoordinator<OAuthRefreshResponse>(rotatedToken: { $0.refresh_token })
+
     private func performTokenRefresh(refreshToken: String) async throws -> OAuthRefreshResponse {
+        try await oauthRotations.value(for: refreshToken) {
+            try await self.fetchTokenRefresh(refreshToken: refreshToken)
+        }
+    }
+
+    private func fetchTokenRefresh(refreshToken: String) async throws -> OAuthRefreshResponse {
         let clientId = ProcessInfo.processInfo.environment["CLAUDE_CODE_OAUTH_CLIENT_ID"]
             ?? Self.defaultOAuthClientID
 
@@ -1003,7 +1011,7 @@ class ClaudeCodeSyncService {
     /// Tracker stay in sync.
     func ensureFreshCredentials(for profileId: UUID, allowRotation: Bool = false) async -> String? {
         let profiles = ProfileStore.shared.loadProfiles()
-        guard let profile = profiles.first(where: { $0.id == profileId }) else {
+        guard let profile = profiles.first(where: { $0.id == profileId }), profile.provider == .anthropic else {
             return nil
         }
 
@@ -1023,7 +1031,7 @@ class ClaudeCodeSyncService {
                     || extractRefreshToken(from: systemJSON) == profile.cliCredentialsJSON.flatMap(extractRefreshToken)
                 if sameAccount {
                     if !isTokenExpired(systemJSON) {
-                        persistProfileCredentialsJSON(profileId: profileId, json: systemJSON)
+                        persistProfileCredentialsJSON(profileId: profileId, json: systemJSON, expected: profile)
                         return systemJSON
                     }
                     // System token EXPIRED: Claude Code refreshes ~60s BEFORE expiry
@@ -1037,12 +1045,15 @@ class ClaudeCodeSyncService {
                             let refreshed = try await performTokenRefresh(refreshToken: refreshToken)
                             if let updatedJSON = mergeRefreshedCredentials(into: systemJSON, refreshed: refreshed) {
                                 do {
-                                    try writeSystemCredentials(updatedJSON)
-                                    writeCredentialsFile(updatedJSON)
+                                    if let current = try? readSystemCredentials(),
+                                       extractRefreshToken(from: current) == refreshToken {
+                                        try writeSystemCredentials(updatedJSON)
+                                        writeCredentialsFile(updatedJSON)
+                                    }
                                 } catch {
                                     LoggingService.shared.logError("ensureFreshCredentials: refreshed active-profile tokens but keychain writeback failed — CLI may need /login", error: error)
                                 }
-                                persistProfileCredentialsJSON(profileId: profileId, json: updatedJSON)
+                                persistProfileCredentialsJSON(profileId: profileId, json: updatedJSON, expected: profile)
                                 LoggingService.shared.log("✓ ensureFreshCredentials: refreshed idle active-profile token and wrote back to system keychain")
                                 return updatedJSON
                             }
@@ -1086,7 +1097,7 @@ class ClaudeCodeSyncService {
             // If we sourced from a custom keychain entry, mirror its current contents into the
             // profile cache so display code (menu bar, popover) sees the up-to-date tokens.
             if customSvc != nil {
-                persistProfileCredentialsJSON(profileId: profileId, json: cliJSON)
+                persistProfileCredentialsJSON(profileId: profileId, json: cliJSON, expected: profile)
             }
             return cliJSON
         }
@@ -1142,10 +1153,13 @@ class ClaudeCodeSyncService {
 
         // Write back: always update the profile cache; if we sourced from a custom keychain
         // entry, also persist the rotated tokens there so Claude Code's next read picks them up.
-        persistProfileCredentialsJSON(profileId: profileId, json: updatedJSON)
+        persistProfileCredentialsJSON(profileId: profileId, json: updatedJSON, expected: profile)
         if let svc = customSvc {
             do {
-                try writeKeychainCredentials(serviceName: svc, jsonData: updatedJSON)
+                if let current = readKeychainCredentials(serviceName: svc),
+                   extractRefreshToken(from: current) == refreshToken {
+                    try writeKeychainCredentials(serviceName: svc, jsonData: updatedJSON)
+                }
             } catch {
                 LoggingService.shared.logError("ensureFreshCredentials: refreshed but failed to write back to keychain '\(svc)'", error: error)
             }
@@ -1155,17 +1169,22 @@ class ClaudeCodeSyncService {
         return updatedJSON
     }
 
-    /// Re-loads profiles and writes `json` into the profile's `cliCredentialsJSON` if it
-    /// differs from what's already stored. Re-loading inside the call minimizes the risk
-    /// of clobbering concurrent edits to other profile fields.
-    private func persistProfileCredentialsJSON(profileId: UUID, json: String) {
-        var reloaded = ProfileStore.shared.loadProfiles()
-        guard let idx = reloaded.firstIndex(where: { $0.id == profileId }),
-              reloaded[idx].cliCredentialsJSON != json else {
-            return
+    /// Patch the current managed profile, preserving edits and avoiding a stale
+    /// in-memory credential snapshot overwriting the just-rotated tokens later.
+    private func persistProfileCredentialsJSON(profileId: UUID, json: String, expected: Profile) {
+        if var current = ProfileManager.shared.profiles.first(where: { $0.id == profileId }) {
+            guard CredentialRefreshGuard.canUpdateClaude(current, expected: expected, replacement: json),
+                  current.cliCredentialsJSON != json else { return }
+            current.cliCredentialsJSON = json
+            ProfileManager.shared.updateProfile(current)
+        } else {
+            var reloaded = ProfileStore.shared.loadProfiles()
+            guard let idx = reloaded.firstIndex(where: { $0.id == profileId }),
+                  CredentialRefreshGuard.canUpdateClaude(reloaded[idx], expected: expected, replacement: json),
+                  reloaded[idx].cliCredentialsJSON != json else { return }
+            reloaded[idx].cliCredentialsJSON = json
+            ProfileStore.shared.saveProfiles(reloaded)
         }
-        reloaded[idx].cliCredentialsJSON = json
-        ProfileStore.shared.saveProfiles(reloaded)
     }
 
     /// Merges an OAuth refresh response into the existing `claudeAiOauth` payload,

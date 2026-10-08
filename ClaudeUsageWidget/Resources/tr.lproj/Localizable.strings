@@ -6,3 +6,6 @@
 "widget.session.desc" = "Etkin profilin mevcut 5 saatlik oturum kullanımı.";
 "widget.overview.name" = "Kullanım Özeti";
 "widget.overview.desc" = "Görüntülenen tüm profillerin oturum ve haftalık kullanımı.";
+
+"widget.tools" = "Araç çağrıları";
+"widget.quota" = "Quota";

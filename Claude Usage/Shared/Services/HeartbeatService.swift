@@ -26,7 +26,7 @@ final class HeartbeatService {
     }
 
     private func sendIfNeeded() {
-        let lastPing = UserDefaults.standard.object(forKey: lastPingKey) as? Date ?? .distantPast
+        let lastPing = UserDefaults.appStorage.object(forKey: lastPingKey) as? Date ?? .distantPast
         guard Date().timeIntervalSince(lastPing) >= interval else { return }
 
         Task {
@@ -43,7 +43,7 @@ final class HeartbeatService {
             if let (_, response) = try? await URLSession.shared.data(for: request),
                let http = response as? HTTPURLResponse,
                (200...299).contains(http.statusCode) {
-                UserDefaults.standard.set(Date(), forKey: lastPingKey)
+                UserDefaults.appStorage.set(Date(), forKey: lastPingKey)
             }
         }
     }

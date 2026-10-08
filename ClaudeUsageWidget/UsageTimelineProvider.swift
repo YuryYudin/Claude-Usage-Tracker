@@ -10,19 +10,31 @@ struct UsageEntry: TimelineEntry {
     /// longer be trusted. The app writes a heartbeat snapshot every 5 min.
     static let staleInterval: TimeInterval = 15 * 60
 
+    /// Per-profile staleness. Slightly looser than the whole-snapshot check
+    /// because non-active profiles are polled on the app's slower 5-minute
+    /// background cycle rather than the active profile's interval — this
+    /// allows two missed cycles before flagging a row.
+    ///
+    /// This used to be 6 hours, to stop rows being permanently ghosted back
+    /// when the app refreshed *only* the active profile. That hid the real
+    /// problem: a profile could sit for hours showing a number it had no way
+    /// of knowing was wrong. The app now keeps every displayed profile fresh,
+    /// so the horizon can be honest again.
+    static let perProfileStaleInterval: TimeInterval = 15 * 60
+
     /// Whole-snapshot staleness: the app stopped publishing entirely.
     /// Evaluated against the entry's own date so that a boundary entry in
     /// the timeline flips the dimming at the right moment.
     var isStale: Bool {
         guard let snapshot else { return true }
-        return date.timeIntervalSince(snapshot.generatedAt) > Self.staleInterval
+        return snapshot.isStale(at: date, interval: Self.staleInterval)
     }
 
     /// Per-profile staleness. The single-profile refresh path only updates
     /// the active profile, so other profiles can be stale even while the
-    /// snapshot itself is fresh.
+    /// snapshot itself is fresh — but only after the long horizon above.
     func isProfileStale(_ profile: WidgetSnapshot.ProfileEntry) -> Bool {
-        isStale || date.timeIntervalSince(profile.lastUpdated) > Self.staleInterval
+        isStale || profile.isStale(at: date, interval: Self.perProfileStaleInterval)
     }
 
     static func placeholderSnapshot() -> WidgetSnapshot {
@@ -76,9 +88,13 @@ struct UsageTimelineProvider: TimelineProvider {
         if let snapshot {
             var boundaries = [snapshot.generatedAt.addingTimeInterval(UsageEntry.staleInterval)]
             for profile in snapshot.profiles {
-                boundaries.append(profile.lastUpdated.addingTimeInterval(UsageEntry.staleInterval))
-                boundaries.append(profile.sessionResetTime)
-                boundaries.append(profile.weeklyResetTime)
+                boundaries.append(profile.lastUpdated.addingTimeInterval(UsageEntry.perProfileStaleInterval))
+                if let sessionResetTime = profile.sessionResetTime {
+                    boundaries.append(sessionResetTime)
+                }
+                if let weeklyResetTime = profile.weeklyResetTime {
+                    boundaries.append(weeklyResetTime)
+                }
             }
             for boundary in boundaries where boundary > now && boundary < refresh {
                 dates.insert(boundary)

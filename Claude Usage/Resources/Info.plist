@@ -35,6 +35,10 @@
 	<key>NSSupportsSuddenTermination</key>
 	<false/>
 
+	<!-- A compatible fork update feed is required before enabling Sparkle. -->
+	<key>ProviderIntegrationUpdatesEnabled</key>
+	<false/>
+
 	<!-- Sparkle Update Configuration -->
 	<key>SUFeedURL</key>
 	<string>https://hamed-elfayome.github.io/Claude-Usage-Tracker/appcast.xml</string>

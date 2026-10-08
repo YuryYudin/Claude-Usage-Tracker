@@ -35,7 +35,7 @@ final class NotchHookInstallerTests: XCTestCase {
         for (_, value) in hooks {
             for group in (value as? [[String: Any]]) ?? [] {
                 for hook in (group["hooks"] as? [[String: Any]]) ?? [] {
-                    if let url = hook["url"] as? String, url.contains("19847") {
+                    if let url = hook["url"] as? String, url.contains(String(Constants.NotchHUD.port)) {
                         urls.append(url)
                     }
                 }
@@ -86,7 +86,7 @@ final class NotchHookInstallerTests: XCTestCase {
         // blocking PermissionRequest hook) as found on real machines.
         func legacyEntry(_ suffix: String, timeout: Int = 3) -> [String: Any] {
             ["matcher": "", "hooks": [["type": "http",
-                                       "url": "http://127.0.0.1:19847/hook/\(suffix)",
+                                       "url": "http://127.0.0.1:\(Constants.NotchHUD.port)/hook/\(suffix)",
                                        "timeout": timeout]]]
         }
         try writeSettings([

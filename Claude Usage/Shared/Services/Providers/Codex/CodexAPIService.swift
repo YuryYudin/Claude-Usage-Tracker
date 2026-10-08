@@ -156,6 +156,8 @@ final class CodexAPIService {
         var usage = ClaudeUsage.empty
         usage.weeklyLimit = 0  // .empty uses a placeholder token limit; Codex has none
 
+        usage.sessionAvailable = session != nil
+        usage.weeklyAvailable = weekly != nil
         usage.sessionPercentage = session?.usedPercent ?? 0
         if let sessionReset = session?.resetDate {
             usage.sessionResetTime = sessionReset
@@ -176,6 +178,13 @@ final class CodexAPIService {
             usage.weeklyResetTime = Date().addingTimeInterval(7 * 24 * 60 * 60)
         }
 
+        usage.quotaWindows = [("session", UsageQuota.Role.session, session), ("weekly", .weekly, weekly)].compactMap { id, role, window in
+            guard let window else { return nil }
+            return UsageQuota(id: "codex:\(id)", bucketID: "codex", label: "Codex", role: role,
+                usedPercentage: window.usedPercent, resetTime: window.resetDate,
+                durationMinutes: window.windowMinutes, unit: nil)
+        }
+        usage.selectedQuotaID = usage.primaryQuota?.id
         usage.planType = response.planType
         if let credits = response.credits {
             usage.creditsUnlimited = credits.unlimited

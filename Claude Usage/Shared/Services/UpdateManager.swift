@@ -44,6 +44,11 @@ final class UpdateUserDriver: NSObject, SPUStandardUserDriverDelegate {
 final class UpdateManager: ObservableObject {
     static let shared = UpdateManager()
 
+    /// Enable only after a feed with these providers and migration support exists.
+    static var updatesAvailable: Bool {
+        !AppEnvironment.isTesting && Bundle.main.object(forInfoDictionaryKey: "ProviderIntegrationUpdatesEnabled") as? Bool == true
+    }
+
     private let updaterController: SPUStandardUpdaterController
     private let userDriver: UpdateUserDriver // Keep strong reference
 
@@ -56,25 +61,27 @@ final class UpdateManager: ObservableObject {
 
         // Initialize Sparkle updater with user driver delegate
         updaterController = SPUStandardUpdaterController(
-            startingUpdater: true,
+            startingUpdater: Self.updatesAvailable,
             updaterDelegate: nil,
             userDriverDelegate: userDriver
         )
 
-        automaticChecksEnabled = updaterController.updater.automaticallyChecksForUpdates
-        canCheckForUpdates = updaterController.updater.canCheckForUpdates
+        automaticChecksEnabled = Self.updatesAvailable && updaterController.updater.automaticallyChecksForUpdates
+        canCheckForUpdates = Self.updatesAvailable && updaterController.updater.canCheckForUpdates
 
         LoggingService.shared.logInfo("Update manager initialized with gentle reminders")
     }
 
     /// Manually check for updates
     func checkForUpdates() {
+        guard Self.updatesAvailable else { return }
         updaterController.checkForUpdates(nil)
         LoggingService.shared.logInfo("Manual update check triggered")
     }
 
     /// Toggle automatic update checks
     func setAutomaticChecksEnabled(_ enabled: Bool) {
+        guard Self.updatesAvailable else { return }
         updaterController.updater.automaticallyChecksForUpdates = enabled
         automaticChecksEnabled = enabled
         DataStore.shared.userDefaults.set(enabled, forKey: "SUEnableAutomaticChecks")

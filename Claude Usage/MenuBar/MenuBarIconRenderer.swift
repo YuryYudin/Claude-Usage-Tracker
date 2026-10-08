@@ -158,7 +158,7 @@ final class MenuBarIconRenderer {
         usePaceColoring: Bool = true
     ) -> MetricData {
         switch metricType {
-        case .session:
+        case .session, .codex, .zai:
             let usedPercentage = usage.effectiveSessionPercentage
             let displayPercentage = UsageStatusCalculator.getDisplayPercentage(
                 usedPercentage: usedPercentage,
@@ -1401,7 +1401,7 @@ final class MenuBarIconRenderer {
         let duration: TimeInterval
 
         switch metricType {
-        case .session:
+        case .session, .codex, .zai:
             resetTime = usage.sessionResetTime
             duration = Constants.sessionWindow
         case .week:

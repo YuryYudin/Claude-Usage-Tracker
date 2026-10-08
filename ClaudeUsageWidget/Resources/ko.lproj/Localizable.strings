@@ -6,3 +6,6 @@
 "widget.session.desc" = "활성 프로필의 5시간 세션 사용량입니다.";
 "widget.overview.name" = "사용량 개요";
 "widget.overview.desc" = "표시된 모든 프로필의 세션 및 주간 사용량입니다.";
+
+"widget.tools" = "도구 호출";
+"widget.quota" = "Quota";

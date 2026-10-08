@@ -16,27 +16,29 @@ class ProfileMigrationService {
     private init() {}
 
     func migrateIfNeeded() {
-        guard !UserDefaults.standard.bool(forKey: migrationKey) else {
+        guard !UserDefaults.appStorage.bool(forKey: migrationKey) else {
             LoggingService.shared.log("Profile migration already completed")
             return
         }
 
+        // A v3 store, including an unreadable one, must never be replaced by v2 migration.
+        if UserDefaults.appStorage.data(forKey: "profiles_v3") != nil {
+            return
+        }
         LoggingService.shared.log("Starting migration to multi-profile system...")
 
         do {
             // 1. Create first profile from existing settings
             let firstProfile = createFirstProfileFromLegacy()
 
-            // 2. Migrate credentials from old Keychain keys to profile-specific keys
+            // Persist the profile before attaching its legacy credentials.
+            guard ProfileStore.shared.saveProfiles([firstProfile]) else { return }
             try migrateCredentialsToProfile(firstProfile.id)
-
-            // 3. Save first profile
-            ProfileStore.shared.saveProfiles([firstProfile])
             ProfileStore.shared.saveActiveProfileId(firstProfile.id)
             ProfileStore.shared.saveDisplayMode(.single)
 
             // 4. Mark migration complete
-            UserDefaults.standard.set(true, forKey: migrationKey)
+            UserDefaults.appStorage.set(true, forKey: migrationKey)
 
             LoggingService.shared.log("Migration complete. First profile: \(firstProfile.name)")
         } catch {
@@ -122,7 +124,7 @@ class ProfileMigrationService {
 
     /// Resets migration flag for testing purposes
     func resetMigration() {
-        UserDefaults.standard.removeObject(forKey: migrationKey)
+        UserDefaults.appStorage.removeObject(forKey: migrationKey)
         LoggingService.shared.log("Reset migration flag")
     }
 }

@@ -7,8 +7,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     private var setupWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        guard !AppEnvironment.isTesting else { return }
         // Disable window restoration for menu bar app
-        UserDefaults.standard.set(false, forKey: "NSQuitAlwaysKeepsWindows")
+        UserDefaults.appStorage.set(false, forKey: "NSQuitAlwaysKeepsWindows")
 
         // Set app icon early for Stage Manager and windows
         if let appIcon = NSImage(named: "AppIcon") {
@@ -20,6 +21,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
         // Load profiles into ProfileManager (synchronously)
         ProfileManager.shared.loadProfiles()
+        if ProfileStore.shared.hasUnreadableProfiles || ProfileStore.shared.lastPersistenceError != nil {
+            let alert = NSAlert()
+            alert.messageText = "profiles.storage_error.title".localized
+            alert.informativeText = "profiles.storage_error.description".localized
+            alert.runModal()
+            return
+        }
 
         // Regenerate installed statusline scripts so they pick up format changes
         // across app updates and re-embed fresh Cloudflare clearance cookies.

@@ -17,8 +17,19 @@ final class CodexUsageProvider: UsageProviderService {
 
     private init() {}
 
+    func fetchStatus() async throws -> ClaudeStatus? { try await OpenAIStatusService().fetchStatus() }
+
     func hasCredentials(for profile: Profile) -> Bool {
-        profile.hasUsageCredentials
+        if profile.codexConfiguration != nil { return CodexAppServerProvider.shared.hasCredentials(for: profile) }
+        return profile.codexCredentialsJSON != nil
+            || (profile.id == ProfileManager.shared.activeProfile?.id && profile.hasUsageCredentials)
+    }
+
+    func fetchResult(for profile: Profile, active: Bool) async throws -> UsageProviderResult {
+        if profile.codexConfiguration != nil {
+            return try await CodexAppServerProvider.shared.fetchResult(for: profile, active: active)
+        }
+        return UsageProviderResult(usage: try await fetchUsage(for: profile))
     }
 
     /// load credentials → refresh if stale (>8 days) → fetch → map.
@@ -26,6 +37,9 @@ final class CodexUsageProvider: UsageProviderService {
     /// refresh and retry once — the Codex CLI has no equivalent of Anthropic's
     /// system-keychain fallback, so a failed retry surfaces the error.
     func fetchUsage(for profile: Profile) async throws -> ClaudeUsage {
+        if profile.codexConfiguration != nil {
+            return try await CodexAppServerProvider.shared.fetchUsage(for: profile)
+        }
         // The shared ~/.codex/auth.json reflects ONE signed-in Codex account.
         // Only the active profile may fall back to it — a non-active profile
         // without its own pasted credentials would silently display (and

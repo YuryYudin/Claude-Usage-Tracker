@@ -66,7 +66,7 @@ enum Constants {
     // Claude Code notch HUD (hook listener + display)
     enum NotchHUD {
         static let host = "127.0.0.1"
-        static let port: UInt16 = 19847
+        static let port: UInt16 = AppEnvironment.isTesting ? 29847 : 19847
         /// Base URL prefix used in installed hook URLs; also matched by the
         /// installer when stripping our own (or legacy) hook entries.
         static var baseURL: String { "http://\(host):\(port)" }

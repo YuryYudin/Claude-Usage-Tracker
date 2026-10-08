@@ -18,7 +18,7 @@ class KeychainMigrationService {
     /// Performs one-time migration of session keys to Keychain
     func performMigrationIfNeeded() {
         // Check if migration has already been completed
-        if UserDefaults.standard.bool(forKey: migrationCompletedKey) {
+        if UserDefaults.appStorage.bool(forKey: migrationCompletedKey) {
             LoggingService.shared.log("Keychain migration already completed, skipping")
             return
         }
@@ -34,7 +34,7 @@ class KeychainMigrationService {
         migratedCount += migrateAPISessionKeyFromUserDefaults()
 
         // Mark migration as completed
-        UserDefaults.standard.set(true, forKey: migrationCompletedKey)
+        UserDefaults.appStorage.set(true, forKey: migrationCompletedKey)
 
         if migratedCount > 0 {
             LoggingService.shared.log("Keychain migration completed: migrated \(migratedCount) key(s)")
@@ -96,8 +96,8 @@ class KeychainMigrationService {
             LoggingService.shared.log("API session key already in Keychain, skipping UserDefaults migration")
 
             // Clean up UserDefaults even if Keychain already has the key
-            if UserDefaults.standard.string(forKey: Constants.UserDefaultsKeys.apiSessionKey) != nil {
-                UserDefaults.standard.removeObject(forKey: Constants.UserDefaultsKeys.apiSessionKey)
+            if UserDefaults.appStorage.string(forKey: Constants.UserDefaultsKeys.apiSessionKey) != nil {
+                UserDefaults.appStorage.removeObject(forKey: Constants.UserDefaultsKeys.apiSessionKey)
                 LoggingService.shared.log("Cleaned up API session key from UserDefaults")
             }
 
@@ -105,7 +105,7 @@ class KeychainMigrationService {
         }
 
         // Check if key exists in UserDefaults
-        guard let legacyKey = UserDefaults.standard.string(forKey: Constants.UserDefaultsKeys.apiSessionKey) else {
+        guard let legacyKey = UserDefaults.appStorage.string(forKey: Constants.UserDefaultsKeys.apiSessionKey) else {
             LoggingService.shared.log("No API session key found in UserDefaults to migrate")
             return 0
         }
@@ -115,7 +115,7 @@ class KeychainMigrationService {
             try KeychainService.shared.save(legacyKey, for: .apiSessionKey)
 
             // Remove from UserDefaults
-            UserDefaults.standard.removeObject(forKey: Constants.UserDefaultsKeys.apiSessionKey)
+            UserDefaults.appStorage.removeObject(forKey: Constants.UserDefaultsKeys.apiSessionKey)
 
             LoggingService.shared.log("Migrated API session key from UserDefaults to Keychain")
             return 1
@@ -128,7 +128,7 @@ class KeychainMigrationService {
 
     /// Resets the migration flag (for testing purposes)
     func resetMigrationForTesting() {
-        UserDefaults.standard.removeObject(forKey: migrationCompletedKey)
+        UserDefaults.appStorage.removeObject(forKey: migrationCompletedKey)
         LoggingService.shared.log("Reset Keychain migration flag for testing")
     }
 }

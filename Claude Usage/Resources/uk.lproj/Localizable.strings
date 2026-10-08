@@ -144,7 +144,6 @@
 "setup.welcome.subtitle" = "Налаштуйте доступ до API для початку відстеження";
 "setup.step.get_session_key" = "Отримайте ключ сесії";
 "setup.step.get_session_key.description" = "Вам потрібно витягти ключ сесії з claude.ai";
-"setup.step.enter_session_key" = "Введіть ключ сесії";
 "setup.open_claude_ai" = "Відкрити claude.ai";
 "setup.show_instructions" = "Показати інструкції";
 "setup.hide_instructions" = "Приховати";
@@ -626,7 +625,6 @@
 /* MARK: - Setup Wizard */
 /* ==================== */
 "setup.step.enter_session_key" = "Введіть ключ";
-"wizard.test_connection" = "Перевірити підключення";
 "wizard.select_org_title" = "Яку організацію ви хочете відстежувати?";
 "wizard.select_org_subtitle" = "Виберіть організацію Claude для моніторингу використання";
 "wizard.config_summary" = "Підсумок конфігурації";
@@ -759,8 +757,6 @@
 "about.reset_confirmation_title" = "Скинути всі дані програми?";
 "about.reset_confirm" = "Скинути";
 "about.reset_confirmation_message" = "Це назавжди видалить всі профілі, облікові дані та налаштування. Програма завершить роботу, і вам потрібно буде налаштувати все знову. Це неможливо скасувати.";
-"wizard.skip_migration" = "Пропустити";
-"wizard.migration_skipped" = "Міграцію пропущено. За потреби ви можете вручну синхронізувати старі дані пізніше.";
 
 /* Claude Code Info */
 "wizard.claude_code_info_title" = "Використовуєте Claude Code?";
@@ -1088,3 +1084,105 @@
 "support.popup_signature" = "команда з однієї людини за Claude Usage";
 "support.popup_body" = "Безплатний, з відкритим кодом, зроблений однією людиною — без реклами й стеження. Якщо він урятував вас від спаленого ліміту сесії, кава тримає його живим.";
 "support.popup_days" = "Пильнує ваші ліміти вже %d днів — завжди безплатно";
+
+// Additional provider connections and quotas
+"codex.settings.nav_title" = "OpenAI Codex";
+"codex.settings.nav_desc" = "Налаштувати моніторинг використання Codex";
+"codex.settings.title" = "OpenAI Codex";
+"codex.settings.subtitle" = "Налаштуйте локальне або SSH-підключення до Codex і відображення використання для цього профілю";
+"codex.settings.monitoring_title" = "Моніторинг";
+"codex.settings.monitoring_desc" = "Дані використання Codex належать цьому профілю та використовують спільні параметри профілів застосунку.";
+"codex.settings.monitoring_toggle" = "Відстежувати використання Codex";
+"codex.settings.monitoring_toggle_desc" = "Запускати локальний або доступний через SSH Codex app-server цього профілю під час оновлення даних.";
+"codex.settings.connection_title" = "Підключення";
+"codex.settings.connection_desc" = "Використовуйте Codex на цьому Mac або підключіться через псевдонім хоста SSH.";
+"codex.settings.executable" = "Виконуваний файл Codex";
+"codex.settings.executable_auto" = "Автоматично виявляти codex";
+"codex.settings.choose" = "Вибрати";
+"codex.settings.auto" = "Авто";
+"codex.settings.account" = "Обліковий запис";
+"codex.settings.show_email" = "Показувати електронну адресу";
+"codex.settings.show_email_desc" = "Показувати в параметрах електронну адресу облікового запису Codex, у який виконано вхід.";
+"codex.settings.last_refresh" = "Останнє успішне оновлення";
+"codex.settings.recheck" = "Перевірити знову";
+"codex.settings.refresh" = "Оновити зараз";
+"codex.settings.setup_title" = "Посібник із налаштування";
+"codex.settings.setup_desc" = "Установіть Codex і ввійдіть у систему на вибраному комп’ютері. Для профілів SSH потрібне неінтерактивне підключення.";
+"codex.settings.open_docs" = "Відкрити документацію Codex";
+"codex.settings.tray_title" = "Рядок меню";
+"codex.settings.tray_desc" = "Налаштуйте піктограму постачальника Codex і групу використання.";
+"codex.settings.multi_profile_hint" = "Codex є окремим профілем постачальника. Виберіть його в розділі «Керування профілями», щоб показувати в багатопрофільному режимі.";
+"codex.settings.bucket" = "Група обмежень у рядку меню";
+"codex.settings.bucket_desc" = "Виберіть обмеження Codex, яке керуватиме піктограмою рядка меню та сповіщеннями цього профілю.";
+"codex.settings.automatic" = "Автоматично";
+"codex.settings.notifications_title" = "Сповіщення";
+"codex.settings.notifications_desc" = "Сповіщати, коли вибрана група обмежень Codex перевищує порогове значення.";
+"codex.settings.notifications_toggle" = "Сповіщення про використання Codex";
+"codex.settings.notifications_toggle_desc" = "Надсилати одне сповіщення для кожного порога протягом кожного вікна обмеження.";
+"codex.settings.usage_title" = "Дані використання";
+"codex.settings.usage_desc" = "Дані, отримані через підключення до Codex app-server цього профілю.";
+"codex.settings.credits" = "Кредити";
+"codex.settings.unlimited" = "Без обмежень";
+"codex.settings.available" = "Доступно";
+"codex.settings.lifetime_tokens" = "Токенів за весь час";
+"codex.settings.privacy" = "Автентифікацією керує Codex CLI на вибраному комп’ютері. Облікові дані SSH залишаються в OpenSSH; цей застосунок не читає файли облікових даних Codex і не зберігає приватні ключі SSH.";
+"codex.settings.no_usage" = "Дані використання Codex ще не завантажено.";
+"codex.settings.checking" = "Перевірка встановлення Codex…";
+"codex.settings.not_installed" = "Codex CLI не знайдено";
+"codex.settings.signed_out" = "У Codex CLI не виконано вхід";
+"codex.settings.connected" = "Codex підключено";
+"codex.settings.copy" = "Копіювати команду";
+"codex.settings.choose_title" = "Вибрати виконуваний файл Codex";
+"codex.settings.choose_message" = "Виберіть виконуваний файл командного рядка codex.";
+"codex.settings.experimental_note" = "Codex app-server є експериментальною інтеграцією. Віддалені профілі використовують зашифроване SSH-з’єднання stdio й не надають app-server як мережеву службу.";
+"codex.onboarding.title" = "Використання OpenAI Codex";
+"codex.onboarding.detected" = "Codex CLI виявлено. Завершіть налаштування, а потім створіть профіль OpenAI Codex у меню Параметри → Керування профілями.";
+"codex.onboarding.optional" = "Локальний або SSH-профіль Codex також можна створити пізніше в меню Параметри → Керування профілями.";
+"codex.onboarding.copy_command" = "Копіювати команду налаштування";
+"zai.settings.nav_title" = "Z.ai GLM";
+"zai.settings.nav_desc" = "Налаштувати моніторинг використання GLM Coding Plan від Z.ai";
+"zai.settings.title" = "Z.ai GLM";
+"zai.settings.subtitle" = "Відстежуйте квоти GLM Coding Plan цього профілю за допомогою ключа API z.ai";
+"zai.settings.connection_title" = "З'єднання";
+"zai.settings.connection_desc" = "Вставте ключ API z.ai з активною підпискою GLM Coding Plan.";
+"zai.settings.api_key" = "Ключ API z.ai";
+"zai.settings.api_key_help" = "Створіть ключ API на z.ai → API Keys. Ключі кодингового плану повертають квоти на 5 годин, тижневі та інструментальні. Ключ зберігається у Зв'язці ключів.";
+"zai.settings.api_key_placeholder" = "Вставте свій ключ API z.ai";
+"zai.settings.api_key_placeholder_keep" = "Введіть новий ключ API z.ai";
+"zai.settings.save_key" = "Зберегти ключ";
+"zai.settings.replace_key" = "Замінити";
+"zai.settings.remove_key" = "Видалити";
+"zai.settings.setup_title" = "Посібник із налаштування";
+"zai.settings.setup_desc" = "Підпишіться на GLM Coding Plan і створіть ключ API.";
+"zai.settings.setup_steps" = "1. Підпишіться на GLM Coding Plan (Lite, Pro чи Max) на z.ai.\n2. Створіть ключ API у розділі API Keys.\n3. Вставте ключ вище — квоти оновлюватимуться автоматично з інтервалом профілю.";
+"zai.settings.open_docs" = "Відкрити документацію плану";
+"zai.settings.open_console" = "Відкрити консоль z.ai";
+"zai.settings.bucket" = "Квота в рядку меню";
+"zai.settings.bucket_desc" = "Виберіть, яка квота z.ai керує значком і сповіщеннями цього профілю.";
+"zai.settings.usage_title" = "Дані використання";
+"zai.settings.usage_desc" = "Квоти, які API моніторингу z.ai повертає для ключа цього профілю.";
+"zai.settings.no_usage" = "Дані використання z.ai ще не завантажено.";
+"zai.settings.no_key" = "Ключ API z.ai не налаштовано";
+"zai.settings.key_configured" = "Ключ API налаштовано";
+"zai.settings.checking" = "З'єднання з z.ai…";
+"zai.settings.connected" = "z.ai під'єднано";
+"zai.settings.error_state" = "Помилка з'єднання з z.ai";
+"zai.settings.refresh" = "Оновити зараз";
+"zai.settings.plan" = "План";
+"zai.settings.privacy" = "Ключ API зберігається у Зв'язці ключів macOS і надсилається лише на api.z.ai через HTTPS.";
+"zai.onboarding.title" = "GLM Coding Plan від Z.ai";
+"zai.onboarding.optional" = "Користуєтеся GLM Coding Plan? Створіть профіль Z.ai GLM пізніше в Параметри → Керування профілями.";
+"zai.onboarding.open_console" = "Отримати ключ API";
+"zai.window.session" = "5-годинне кредитне вікно";
+"zai.window.weekly" = "Тижневе кредитне вікно";
+"zai.window.tools_title" = "Веб-інструменти";
+"zai.window.tools" = "Щомісячні виклики Vision, Web Search і Reader";
+
+
+// Provider integration and account recovery
+"codex.connection_source" = "Connection source";
+"codex.connection_http" = "HTTP credentials";
+"codex.connection_cli" = "Local CLI or SSH";
+"profiles.storage_error.title" = "Accounts could not be loaded safely";
+"profiles.storage_error.description" = "Your original account data has been preserved. Check the storage error and migration backup before continuing.";
+"settings.updates.integration_disabled" = "Updates are paused for this build to protect Codex connections and GLM accounts. A compatible update channel is required before updates can resume.";

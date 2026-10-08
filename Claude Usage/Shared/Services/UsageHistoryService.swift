@@ -35,7 +35,7 @@ class UsageHistoryService {
     private let historyMigrationDoneKey = "usageHistoryMigratedToFiles_v1"
 
     private init() {
-        self.defaults = UserDefaults.standard
+        self.defaults = UserDefaults.appStorage
         migrateHistoryToFilesIfNeeded()
     }
 
@@ -47,11 +47,7 @@ class UsageHistoryService {
     /// the domain — including profile credentials. Storing it as files keeps the
     /// UserDefaults domain small so credential/profile saves persist reliably.
     private var historyDirectory: URL {
-        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-            ?? Constants.ClaudePaths.homeDirectory.appendingPathComponent("Library/Application Support")
-        let dir = base
-            .appendingPathComponent("Claude Usage", isDirectory: true)
-            .appendingPathComponent("history", isDirectory: true)
+        let dir = AppEnvironment.applicationSupport.appendingPathComponent("history", isDirectory: true)
         if !FileManager.default.fileExists(atPath: dir.path) {
             try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         }
@@ -229,6 +225,7 @@ class UsageHistoryService {
 
     /// Records session usage periodically (every 10 minutes)
     func recordSessionPeriodic(for profileId: UUID, usage: ClaudeUsage, provider: Provider = .anthropic) {
+        guard usage.sessionAvailable != false else { return }
         let now = Date()
 
         // Check if enough time has passed since last recording (using persisted timestamp)
@@ -268,6 +265,7 @@ class UsageHistoryService {
 
     /// Records weekly usage periodically (every 2 hours)
     func recordWeeklyPeriodic(for profileId: UUID, usage: ClaudeUsage, provider: Provider = .anthropic) {
+        guard usage.weeklyAvailable != false else { return }
         let now = Date()
 
         // Check if enough time has passed since last recording (using persisted timestamp)

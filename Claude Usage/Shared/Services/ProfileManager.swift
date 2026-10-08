@@ -18,27 +18,42 @@ class ProfileManager: ObservableObject {
     @Published var multiProfileConfig: MultiProfileDisplayConfig = .default
     @Published var isSwitchingProfile: Bool = false
 
-    private let profileStore = ProfileStore.shared
-    private let cliSyncService = ClaudeCodeSyncService.shared
+    @Published private(set) var storageError: String?
+    private let profileStore: ProfileStore
+    private let cliSyncService: ClaudeCodeSyncService
 
     private var switchingSemaphore = false
 
-    private init() {}
+    init(store: ProfileStore? = nil, cliSyncService: ClaudeCodeSyncService? = nil) {
+        self.profileStore = store ?? .shared
+        self.cliSyncService = cliSyncService ?? .shared
+    }
+
+    @discardableResult
+    private func persist(_ candidates: [Profile]) -> Bool {
+        let success = profileStore.saveProfiles(candidates)
+        storageError = profileStore.lastPersistenceError
+        return success
+    }
 
     // MARK: - Initialization
 
     func loadProfiles() {
         profiles = profileStore.loadProfiles()
 
+        storageError = profileStore.lastPersistenceError
+        guard !profileStore.hasUnreadableProfiles else { return }
         // Ensure minimum 1 profile
         if profiles.isEmpty {
             let defaultProfile = createDefaultProfile()
             profiles = [defaultProfile]
-            profileStore.saveProfiles(profiles)
+            persist(profiles)
 
             // On first launch, try to sync CLI credentials to the new default profile
             syncCLICredentialsToDefaultProfile(defaultProfile.id)
         }
+
+        migrateLegacyCodexProfileIfNeeded()
 
         // Load active profile
         if let activeId = profileStore.loadActiveProfileId(),
@@ -76,6 +91,8 @@ class ProfileManager: ObservableObject {
             id: UUID(),
             name: profileName,
             provider: provider,
+            codexConfiguration: provider == .codex ? copySettingsFrom?.codexConfiguration : nil,
+            zaiConfiguration: provider == .zai ? (copySettingsFrom?.zaiConfiguration ?? ZAIProfileConfiguration()) : ZAIProfileConfiguration(),
             hasCliAccount: false,
             iconConfig: iconConfig,
             refreshInterval: copySettingsFrom?.refreshInterval ?? 30.0,
@@ -85,16 +102,20 @@ class ProfileManager: ObservableObject {
             isSelectedForDisplay: true
         )
 
-        profiles.append(newProfile)
-        profileStore.saveProfiles(profiles)
+        let candidates = profiles + [newProfile]
+        if persist(candidates) { profiles = candidates }
 
         LoggingService.shared.log("Created new profile: \(newProfile.name)")
         return newProfile
     }
 
-    func updateProfile(_ profile: Profile) {
+    @discardableResult
+    func updateProfile(_ profile: Profile) -> Bool {
         if let index = profiles.firstIndex(where: { $0.id == profile.id }) {
-            profiles[index] = profile
+            var candidates = profiles
+            candidates[index] = profile
+            guard persist(candidates) else { return false }
+            profiles = candidates
 
             if activeProfile?.id == profile.id {
                 activeProfile = profile
@@ -110,8 +131,9 @@ class ProfileManager: ObservableObject {
                 LoggingService.shared.log("Updated profile: \(profile.name) (not active)")
             }
 
-            profileStore.saveProfiles(profiles)
+            return true
         }
+        return false
     }
 
     func deleteProfile(_ id: UUID) throws {
@@ -119,6 +141,11 @@ class ProfileManager: ObservableObject {
             throw ProfileError.cannotDeleteLastProfile
         }
 
+        let candidates = profiles.filter { $0.id != id }
+        guard persist(candidates) else {
+            throw NSError(domain: "ProfileStore", code: 4,
+                userInfo: [NSLocalizedDescriptionKey: storageError ?? "Accounts could not be saved"])
+        }
         let profileName = profiles.first(where: { $0.id == id })?.name ?? "unknown"
 
         // Remove the profile's terminal launcher script, if any (the launcher's
@@ -131,7 +158,7 @@ class ProfileManager: ObservableObject {
         UsageHistoryService.shared.deleteHistory(for: id)
         LoggingService.shared.log("Successfully deleted usage history for profile: \(profileName)")
 
-        profiles.removeAll { $0.id == id }
+        profiles = candidates
 
         // Remove the profile's credentials from the Keychain (they no longer live
         // in the profiles plist — #267).
@@ -146,7 +173,6 @@ class ProfileManager: ObservableObject {
             }
         }
 
-        profileStore.saveProfiles(profiles)
         LoggingService.shared.log("Deleted profile: \(profileName)")
     }
 
@@ -156,7 +182,7 @@ class ProfileManager: ObservableObject {
             guard let self = self else { return }
             if let index = self.profiles.firstIndex(where: { $0.id == id }) {
                 self.profiles[index].isSelectedForDisplay.toggle()
-                self.profileStore.saveProfiles(self.profiles)
+                self.persist(self.profiles)
             }
         }
     }
@@ -205,6 +231,7 @@ class ProfileManager: ObservableObject {
 
         switchingSemaphore = true
         isSwitchingProfile = true
+        defer { switchingSemaphore = false; isSwitchingProfile = false }
 
         LoggingService.shared.log("Switching to profile: \(profile.name)")
 
@@ -246,12 +273,19 @@ class ProfileManager: ObservableObject {
             // keychain and Claude Code would 401 ("Please run /login"). This refreshes
             // via the refresh_token grant and persists the rotated tokens back to the
             // profile, so applyProfileCredentials below writes a valid token.
+            var refreshedJSON: String?
             if let refreshed = await cliSyncService.ensureFreshCredentials(for: updatedProfile.id, allowRotation: true) {
+                refreshedJSON = refreshed
                 LoggingService.shared.log("✓ Ensured fresh credentials before apply for: \(updatedProfile.name)")
                 _ = refreshed
                 // Reload so applyProfileCredentials picks up the refreshed token.
                 profiles = profileStore.loadProfiles()
             }
+            guard let current = profiles.first(where: { $0.id == id }),
+                  current.provider == updatedProfile.provider,
+                  current.customKeychainServiceName == updatedProfile.customKeychainServiceName,
+                  current.oauthAccountJSON == updatedProfile.oauthAccountJSON,
+                  current.cliCredentialsJSON == updatedProfile.cliCredentialsJSON || current.cliCredentialsJSON == refreshedJSON else { return }
             do {
                 try cliSyncService.applyProfileCredentials(updatedProfile.id)
                 LoggingService.shared.log("✓ Applied CLI credentials for: \(updatedProfile.name)")
@@ -263,16 +297,14 @@ class ProfileManager: ObservableObject {
         }
 
         // Update last used timestamp
-        var updated = updatedProfile
+        // Token refresh may have changed this profile while activation awaited it.
+        // Always commit the current record, never the pre-refresh snapshot.
+        guard var updated = profiles.first(where: { $0.id == id }) else { return }
         updated.lastUsedAt = Date()
 
-        if let index = profiles.firstIndex(where: { $0.id == updatedProfile.id }) {
-            profiles[index] = updated
-        }
-
+        guard updateProfile(updated) else { return }
         activeProfile = updated
         profileStore.saveActiveProfileId(id)
-        profileStore.saveProfiles(profiles)
 
         // Update statusline script if the new profile has credentials
         // (statusline is Claude Code infrastructure — capability-gated)
@@ -286,11 +318,13 @@ class ProfileManager: ObservableObject {
             }
         }
 
-        // Update profile name in statusline config
-        do {
-            try StatuslineService.shared.updateProfileNameInConfig(updated.name)
-        } catch {
-            LoggingService.shared.logError("Failed to update statusline profile name (non-fatal)", error: error)
+        // Statusline configuration belongs to Claude Code accounts.
+        if updated.provider.descriptor.capabilities.cliAccountSync {
+            do {
+                try StatuslineService.shared.updateProfileNameInConfig(updated.name)
+            } catch {
+                LoggingService.shared.logError("Failed to update statusline profile name (non-fatal)", error: error)
+            }
         }
 
         switchingSemaphore = false
@@ -306,95 +340,41 @@ class ProfileManager: ObservableObject {
     }
 
     func saveCredentials(for profileId: UUID, credentials: ProfileCredentials) throws {
-        try profileStore.saveProfileCredentials(profileId, credentials: credentials)
-
-        // Update profile in memory
-        if let index = profiles.firstIndex(where: { $0.id == profileId }) {
-            profiles[index].claudeSessionKey = credentials.claudeSessionKey
-            profiles[index].organizationId = credentials.organizationId
-            profiles[index].apiSessionKey = credentials.apiSessionKey
-            profiles[index].apiOrganizationId = credentials.apiOrganizationId
-            profiles[index].cliCredentialsJSON = credentials.cliCredentialsJSON
-
-            if activeProfile?.id == profileId {
-                activeProfile = profiles[index]
-            }
-        }
+        guard var current = profiles.first(where: { $0.id == profileId }) else { throw ClaudeCodeError.noProfileCredentials }
+        current.claudeSessionKey = credentials.claudeSessionKey
+        current.organizationId = credentials.organizationId
+        current.apiSessionKey = credentials.apiSessionKey
+        current.apiOrganizationId = credentials.apiOrganizationId
+        current.cliCredentialsJSON = credentials.cliCredentialsJSON
+        guard updateProfile(current) else { throw persistenceFailure() }
     }
 
-    /// Removes Claude.ai credentials for a profile
     func removeClaudeAICredentials(for profileId: UUID) throws {
-        // Load and clear credentials from Keychain
-        var creds = try profileStore.loadProfileCredentials(profileId)
-        creds.claudeSessionKey = nil
-        creds.organizationId = nil
-        try profileStore.saveProfileCredentials(profileId, credentials: creds)
-
-        // Update Profile model in memory
-        if let index = profiles.firstIndex(where: { $0.id == profileId }) {
-            profiles[index].claudeSessionKey = nil
-            profiles[index].organizationId = nil
-            profiles[index].claudeUsage = nil  // Clear saved usage data
-
-            if activeProfile?.id == profileId {
-                activeProfile = profiles[index]
-            }
-
-            profileStore.saveProfiles(profiles)
-        }
-
-        LoggingService.shared.log("ProfileManager: Removed Claude.ai credentials for profile \(profileId)")
-
-        // Post single notification for credential change
+        guard var current = profiles.first(where: { $0.id == profileId }) else { throw ClaudeCodeError.noProfileCredentials }
+        current.claudeSessionKey = nil; current.organizationId = nil; current.claudeUsage = nil
+        guard updateProfile(current) else { throw persistenceFailure() }
         NotificationCenter.default.post(name: .credentialsChanged, object: nil)
     }
 
-    /// Removes API Console credentials for a profile
     func removeAPICredentials(for profileId: UUID) throws {
-        // Load and clear credentials from Keychain
-        var creds = try profileStore.loadProfileCredentials(profileId)
-        creds.apiSessionKey = nil
-        creds.apiOrganizationId = nil
-        try profileStore.saveProfileCredentials(profileId, credentials: creds)
-
-        // Update Profile model in memory
-        if let index = profiles.firstIndex(where: { $0.id == profileId }) {
-            profiles[index].apiSessionKey = nil
-            profiles[index].apiOrganizationId = nil
-            profiles[index].apiUsage = nil  // Clear saved usage data
-
-            if activeProfile?.id == profileId {
-                activeProfile = profiles[index]
-            }
-
-            profileStore.saveProfiles(profiles)
-        }
-
-        LoggingService.shared.log("ProfileManager: Removed API credentials for profile \(profileId)")
-
-        // Post single notification for credential change
+        guard var current = profiles.first(where: { $0.id == profileId }) else { throw ClaudeCodeError.noProfileCredentials }
+        current.apiSessionKey = nil; current.apiOrganizationId = nil; current.apiUsage = nil
+        guard updateProfile(current) else { throw persistenceFailure() }
         NotificationCenter.default.post(name: .credentialsChanged, object: nil)
+    }
+
+    private func persistenceFailure() -> NSError {
+        NSError(domain: "ProfileStore", code: 4,
+            userInfo: [NSLocalizedDescriptionKey: storageError ?? "Accounts could not be saved"])
     }
 
     // MARK: - Usage Data
 
     /// Saves Claude usage data for a specific profile
     func saveClaudeUsage(_ usage: ClaudeUsage, for profileId: UUID) {
-        guard let index = profiles.firstIndex(where: { $0.id == profileId }) else {
-            LoggingService.shared.logError("saveClaudeUsage: Profile not found with ID: \(profileId)")
-            return
-        }
-
-        profiles[index].claudeUsage = usage
-
-        // Update activeProfile reference if it's the same profile
-        if activeProfile?.id == profileId {
-            activeProfile = profiles[index]
-        }
-
-        // Save to persistent storage
-        profileStore.saveProfiles(profiles)
-        LoggingService.shared.log("Saved Claude usage for profile: \(profiles[index].name)")
+        guard var profile = profiles.first(where: { $0.id == profileId }) else { return }
+        profile.claudeUsage = usage
+        updateProfile(profile)
     }
 
     /// Loads Claude usage data for a specific profile
@@ -404,21 +384,9 @@ class ProfileManager: ObservableObject {
 
     /// Saves API usage data for a specific profile
     func saveAPIUsage(_ usage: APIUsage, for profileId: UUID) {
-        guard let index = profiles.firstIndex(where: { $0.id == profileId }) else {
-            LoggingService.shared.logError("saveAPIUsage: Profile not found with ID: \(profileId)")
-            return
-        }
-
-        profiles[index].apiUsage = usage
-
-        // Update activeProfile reference if it's the same profile
-        if activeProfile?.id == profileId {
-            activeProfile = profiles[index]
-        }
-
-        // Save to persistent storage
-        profileStore.saveProfiles(profiles)
-        LoggingService.shared.log("Saved API usage for profile: \(profiles[index].name)")
+        guard var profile = profiles.first(where: { $0.id == profileId }) else { return }
+        profile.apiUsage = usage
+        updateProfile(profile)
     }
 
     /// Loads API usage data for a specific profile
@@ -430,93 +398,51 @@ class ProfileManager: ObservableObject {
 
     /// Updates icon configuration for a profile
     func updateIconConfig(_ config: MenuBarIconConfiguration, for profileId: UUID) {
-        if let index = profiles.firstIndex(where: { $0.id == profileId }) {
-            profiles[index].iconConfig = config
-
-            if activeProfile?.id == profileId {
-                activeProfile = profiles[index]
-            }
-
-            profileStore.saveProfiles(profiles)
-        }
+        guard var profile = profiles.first(where: { $0.id == profileId }) else { return }
+        profile.iconConfig = config
+        updateProfile(profile)
     }
 
     /// Updates refresh interval for a profile
     func updateRefreshInterval(_ interval: TimeInterval, for profileId: UUID) {
-        if let index = profiles.firstIndex(where: { $0.id == profileId }) {
-            profiles[index].refreshInterval = interval
-
-            if activeProfile?.id == profileId {
-                activeProfile = profiles[index]
-            }
-
-            profileStore.saveProfiles(profiles)
-        }
+        guard var profile = profiles.first(where: { $0.id == profileId }) else { return }
+        profile.refreshInterval = interval
+        updateProfile(profile)
     }
 
     /// Updates auto-start session setting for a profile
     func updateAutoStartSessionEnabled(_ enabled: Bool, for profileId: UUID) {
-        if let index = profiles.firstIndex(where: { $0.id == profileId }) {
-            profiles[index].autoStartSessionEnabled = enabled
-
-            if activeProfile?.id == profileId {
-                activeProfile = profiles[index]
-            }
-
-            profileStore.saveProfiles(profiles)
-        }
+        guard var profile = profiles.first(where: { $0.id == profileId }) else { return }
+        profile.autoStartSessionEnabled = enabled
+        updateProfile(profile)
     }
 
     /// Updates check overage limit setting for a profile
     func updateCheckOverageLimitEnabled(_ enabled: Bool, for profileId: UUID) {
-        if let index = profiles.firstIndex(where: { $0.id == profileId }) {
-            profiles[index].checkOverageLimitEnabled = enabled
-
-            if activeProfile?.id == profileId {
-                activeProfile = profiles[index]
-            }
-
-            profileStore.saveProfiles(profiles)
-        }
+        guard var profile = profiles.first(where: { $0.id == profileId }) else { return }
+        profile.checkOverageLimitEnabled = enabled
+        updateProfile(profile)
     }
 
     /// Updates notification settings for a profile
     func updateNotificationSettings(_ settings: NotificationSettings, for profileId: UUID) {
-        if let index = profiles.firstIndex(where: { $0.id == profileId }) {
-            profiles[index].notificationSettings = settings
-
-            if activeProfile?.id == profileId {
-                activeProfile = profiles[index]
-            }
-
-            profileStore.saveProfiles(profiles)
-        }
+        guard var profile = profiles.first(where: { $0.id == profileId }) else { return }
+        profile.notificationSettings = settings
+        updateProfile(profile)
     }
 
     /// Updates organization ID for a profile
     func updateOrganizationId(_ orgId: String?, for profileId: UUID) {
-        if let index = profiles.firstIndex(where: { $0.id == profileId }) {
-            profiles[index].organizationId = orgId
-
-            if activeProfile?.id == profileId {
-                activeProfile = profiles[index]
-            }
-
-            profileStore.saveProfiles(profiles)
-        }
+        guard var profile = profiles.first(where: { $0.id == profileId }) else { return }
+        profile.organizationId = orgId
+        updateProfile(profile)
     }
 
     /// Updates API organization ID for a profile
     func updateAPIOrganizationId(_ orgId: String?, for profileId: UUID) {
-        if let index = profiles.firstIndex(where: { $0.id == profileId }) {
-            profiles[index].apiOrganizationId = orgId
-
-            if activeProfile?.id == profileId {
-                activeProfile = profiles[index]
-            }
-
-            profileStore.saveProfiles(profiles)
-        }
+        guard var profile = profiles.first(where: { $0.id == profileId }) else { return }
+        profile.apiOrganizationId = orgId
+        updateProfile(profile)
     }
 
     // MARK: - Private Helpers
@@ -554,6 +480,34 @@ class ProfileManager: ObservableObject {
             LoggingService.shared.logError("ProfileManager: Failed to sync CLI credentials on first launch (non-fatal)", error: error)
             // Non-fatal: profile will be created without credentials
             // User can manually sync in settings
+        }
+    }
+
+    private func migrateLegacyCodexProfileIfNeeded() {
+        let defaults = profileStore.preferences
+        guard !defaults.bool(forKey: "codexProfileMigrationCompleted") else { return }
+        guard !profiles.contains(where: { $0.provider == .codex }),
+              let data = defaults.data(forKey: "codexSettings"),
+              let settings = try? JSONDecoder().decode(CodexSettings.self, from: data),
+              settings.monitoringEnabled else { return }
+        let cached = defaults.data(forKey: "codexUsageData").flatMap { try? JSONDecoder().decode(CodexUsage.self, from: $0) }
+        guard settings.menuBarMetric.isEnabled || cached != nil else { return }
+        var metric = settings.menuBarMetric
+        metric.metricType = .session
+        let profile = Profile(name: "Codex", provider: .codex,
+            codexConfiguration: CodexProfileConfiguration(executablePath: settings.executablePath,
+                selectedRateLimitID: settings.selectedRateLimitID, showAccountEmail: settings.showAccountEmail),
+            codexUsage: cached, claudeUsage: cached?.sharedUsage(configuration: CodexProfileConfiguration(
+                executablePath: settings.executablePath, selectedRateLimitID: settings.selectedRateLimitID)), iconConfig: MenuBarIconConfiguration(metrics: [metric, .weekDefault, .apiDefault]),
+            notificationSettings: NotificationSettings(enabled: settings.notificationsEnabled,
+                threshold75Enabled: settings.notificationThresholds.contains(75),
+                threshold90Enabled: settings.notificationThresholds.contains(90),
+                threshold95Enabled: settings.notificationThresholds.contains(95),
+                customThresholds: settings.notificationThresholds.filter { ![75, 90, 95].contains($0) }))
+        let candidates = profiles + [profile]
+        if persist(candidates) {
+            profiles = candidates
+            defaults.set(true, forKey: "codexProfileMigrationCompleted")
         }
     }
 

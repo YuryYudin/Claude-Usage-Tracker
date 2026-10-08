@@ -211,7 +211,6 @@
 /* MARK: - Setup Wizard (Additional) */
 /* ==================== */
 "setup.step.get_session_key.description" = "Necesitarás extraer tu clave de sesión de claude.ai";
-"setup.step.enter_session_key" = "Ingresa tu Clave de Sesión";
 "setup.instruction.step1" = "Abre Herramientas de Desarrollador (F12 o Cmd+Option+I)";
 "setup.instruction.step2" = "Ve a Aplicación/Almacenamiento → Cookies → https://claude.ai";
 "setup.instruction.step3" = "Encuentra la cookie 'sessionKey'";
@@ -451,9 +450,6 @@
 "preview.sample_5_minutes" = "5 minutos";
 
 /* New Keys */
-"api.single_organization" = "Se encontró y seleccionó automáticamente una sola organización";
-"claudecode.button_apply" = "Aplicar";
-"claudecode.button_reset" = "Restablecer";
 "claudecode.component_profile" = "Nombre del perfil";
 "claudecode.context_info" = "El contexto puede mostrar ~80-95% en vez de 100% — Claude comprime automáticamente antes del límite, y los tokens de salida también usan espacio de contexto.";
 "claudecode.element_colors_title" = "Colores de Elementos";
@@ -471,11 +467,6 @@
 "claudecode.element_color_weekly_desc" = "Reemplaza el degradado de uso semanal con un color fijo";
 "claudecode.element_color_extra" = "Uso extra";
 "claudecode.element_color_extra_desc" = "Reemplaza el degradado de uso extra (costo) con un color fijo";
-"error.generic" = "Error: %@";
-"personal.button_saving" = "Guardando...";
-"personal.button_setup_wizard" = "Asistente de Configuración";
-"personal.button_open_claude" = "Abrir claude.ai";
-"personal.success_key_saved" = "Clave de sesión guardada correctamente";
 
 /* ==================== */
 /* MARK: - Updates Settings */
@@ -626,7 +617,6 @@
 /* MARK: - Setup Wizard */
 /* ==================== */
 "setup.step.enter_session_key" = "Ingresar Clave";
-"wizard.test_connection" = "Probar Conexión";
 "wizard.select_org_title" = "¿Qué organización quieres rastrear?";
 "wizard.select_org_subtitle" = "Selecciona la organización de Claude para monitoreo de uso";
 "wizard.config_summary" = "Resumen de Configuración";
@@ -740,10 +730,8 @@
 "wizard.migrate_old_data" = "¿Tiene datos de una versión anterior?";
 "wizard.migrate_description" = "Si tenía una versión anterior instalada, haga clic a continuación para importar sus perfiles y configuraciones antiguos. Esto solicitará permiso del sistema para acceder a los datos.";
 "wizard.migrate_button" = "Migrar datos";
-"wizard.skip_migration" = "Omitir";
 "wizard.migration_success" = "✅ Se migraron correctamente %d elementos";
 "wizard.migration_failed" = "⚠️ Error en la migración: %@";
-"wizard.migration_skipped" = "Migración omitida. Puede sincronizar datos antiguos manualmente más tarde.";
 "about.reset_app_data" = "Restablecer datos de la app";
 "about.reset_confirmation_title" = "¿Restablecer todos los datos de la app?";
 "about.reset_confirm" = "Restablecer";
@@ -768,7 +756,6 @@
 "history.chart.session_title" = "Historial de Uso de Sesión";
 "history.chart.weekly_title" = "Tendencia de Uso Semanal";
 "history.chart.billing_title" = "Gasto Mensual de API";
-"history.chart.now" = "Ahora";
 "history.empty.session_title" = "Sin Historial de Sesión";
 "history.empty.session_description" = "El uso de sesión se registrará después de cada reinicio de 5 horas";
 "history.empty.weekly_title" = "Sin Historial Semanal";
@@ -1074,3 +1061,106 @@
 "support.popup_signature" = "el equipo unipersonal detrás de Claude Usage";
 "support.popup_body" = "Esta app es gratuita y de código abierto: sin anuncios, sin rastreo, sin muros de pago. Cada actualización se construye en mis tardes y fines de semana. Si Claude Usage te ha salvado alguna vez de quemar un límite de sesión, un café es lo que la mantiene viva y mejorando.";
 "support.popup_days" = "Vigilando tus límites desde hace %d días — siempre gratis";
+
+// Additional provider connections and quotas
+
+"codex.settings.nav_title" = "OpenAI Codex";
+"codex.settings.nav_desc" = "Configura la supervisión del uso de Codex";
+"codex.settings.title" = "OpenAI Codex";
+"codex.settings.subtitle" = "Configura la conexión local o SSH a Codex y la visualización del uso de este perfil";
+"codex.settings.monitoring_title" = "Supervisión";
+"codex.settings.monitoring_desc" = "El uso de Codex pertenece a este perfil y comparte los ajustes de perfil de la app.";
+"codex.settings.monitoring_toggle" = "Supervisar el uso de Codex";
+"codex.settings.monitoring_toggle_desc" = "Ejecuta el app-server de Codex local o por SSH de este perfil al actualizar el uso.";
+"codex.settings.connection_title" = "Conexión";
+"codex.settings.connection_desc" = "Usa Codex en este Mac o conéctate mediante un alias de host SSH.";
+"codex.settings.executable" = "Ejecutable de Codex";
+"codex.settings.executable_auto" = "Detectar codex automáticamente";
+"codex.settings.choose" = "Elegir";
+"codex.settings.auto" = "Auto";
+"codex.settings.account" = "Cuenta";
+"codex.settings.show_email" = "Mostrar el correo de la cuenta";
+"codex.settings.show_email_desc" = "Muestra en los ajustes la dirección de correo de la cuenta de Codex conectada.";
+"codex.settings.last_refresh" = "Última actualización correcta";
+"codex.settings.recheck" = "Volver a comprobar";
+"codex.settings.refresh" = "Actualizar ahora";
+"codex.settings.setup_title" = "Guía de configuración";
+"codex.settings.setup_desc" = "Instala Codex e inicia sesión en el equipo seleccionado. Los perfiles SSH requieren una conexión no interactiva.";
+"codex.settings.open_docs" = "Abrir la documentación de Codex";
+"codex.settings.tray_title" = "Barra de menús";
+"codex.settings.tray_desc" = "Personaliza el icono del proveedor Codex y el grupo de uso.";
+"codex.settings.multi_profile_hint" = "Codex es un perfil de proveedor independiente. Selecciónalo en Gestionar perfiles para mostrarlo en el modo de varios perfiles.";
+"codex.settings.bucket" = "Grupo de límite de uso de la barra";
+"codex.settings.bucket_desc" = "Elige qué límite de Codex controla el icono de la barra de menús y las alertas de este perfil.";
+"codex.settings.automatic" = "Automático";
+"codex.settings.notifications_title" = "Notificaciones";
+"codex.settings.notifications_desc" = "Avisa cuando el grupo de límite de uso de Codex seleccionado supere un umbral.";
+"codex.settings.notifications_toggle" = "Alertas de uso de Codex";
+"codex.settings.notifications_toggle_desc" = "Envía una alerta por umbral durante cada intervalo del límite de uso.";
+"codex.settings.usage_title" = "Datos de uso";
+"codex.settings.usage_desc" = "Uso devuelto por la conexión al app-server de Codex de este perfil.";
+"codex.settings.credits" = "Créditos";
+"codex.settings.unlimited" = "Ilimitado";
+"codex.settings.available" = "Disponible";
+"codex.settings.lifetime_tokens" = "Tokens totales";
+"codex.settings.privacy" = "La autenticación permanece en la CLI de Codex del equipo seleccionado. Las credenciales SSH permanecen en OpenSSH; esta app no lee archivos de credenciales de Codex ni almacena claves SSH privadas.";
+"codex.settings.no_usage" = "Aún no se han cargado datos de uso de Codex.";
+"codex.settings.checking" = "Comprobando la instalación de Codex…";
+"codex.settings.not_installed" = "No se ha encontrado la CLI de Codex";
+"codex.settings.signed_out" = "La CLI de Codex no tiene una sesión iniciada";
+"codex.settings.connected" = "Codex conectado";
+"codex.settings.copy" = "Copiar comando";
+"codex.settings.choose_title" = "Elegir el ejecutable de Codex";
+"codex.settings.choose_message" = "Selecciona el ejecutable de línea de comandos codex.";
+"codex.settings.experimental_note" = "Codex app-server es una integración experimental. Los perfiles remotos usan una conexión stdio SSH cifrada y no exponen app-server como servicio de red.";
+"codex.onboarding.title" = "Uso de OpenAI Codex";
+"codex.onboarding.detected" = "Se ha detectado la CLI de Codex. Termina la configuración y crea un perfil de OpenAI Codex en Ajustes → Gestionar perfiles.";
+"codex.onboarding.optional" = "También puedes crear más adelante un perfil de Codex local o SSH en Ajustes → Gestionar perfiles.";
+"codex.onboarding.copy_command" = "Copiar comando de configuración";
+"zai.settings.nav_title" = "Z.ai GLM";
+"zai.settings.nav_desc" = "Configura el seguimiento de uso del plan GLM Coding de Z.ai";
+"zai.settings.title" = "Z.ai GLM";
+"zai.settings.subtitle" = "Sigue las cuotas del GLM Coding Plan de este perfil con una clave API de z.ai";
+"zai.settings.connection_title" = "Conexión";
+"zai.settings.connection_desc" = "Pega una clave API de z.ai con una suscripción activa al GLM Coding Plan.";
+"zai.settings.api_key" = "Clave API de z.ai";
+"zai.settings.api_key_help" = "Crea una clave API en z.ai → API Keys. Las claves del plan de código informan de las cuotas de 5 horas, semanales y de herramientas. La clave se guarda en tu llavero.";
+"zai.settings.api_key_placeholder" = "Pega tu clave API de z.ai";
+"zai.settings.api_key_placeholder_keep" = "Introduce una nueva clave API de z.ai";
+"zai.settings.save_key" = "Guardar clave";
+"zai.settings.replace_key" = "Reemplazar";
+"zai.settings.remove_key" = "Eliminar";
+"zai.settings.setup_title" = "Guía de configuración";
+"zai.settings.setup_desc" = "Suscríbete al GLM Coding Plan y crea una clave API.";
+"zai.settings.setup_steps" = "1. Suscríbete a un GLM Coding Plan (Lite, Pro o Max) en z.ai.\n2. Crea una clave API en API Keys.\n3. Pega la clave arriba; las cuotas se actualizan automáticamente con el intervalo del perfil.";
+"zai.settings.open_docs" = "Abrir documentación del plan";
+"zai.settings.open_console" = "Abrir consola de z.ai";
+"zai.settings.bucket" = "Cuota de la barra de menús";
+"zai.settings.bucket_desc" = "Elige qué cuota de z.ai controla el icono y las alertas de este perfil.";
+"zai.settings.usage_title" = "Datos de uso";
+"zai.settings.usage_desc" = "Cuotas notificadas por la API de monitorización de z.ai para la clave de este perfil.";
+"zai.settings.no_usage" = "Aún no se han cargado datos de uso de z.ai.";
+"zai.settings.no_key" = "No hay clave API de z.ai configurada";
+"zai.settings.key_configured" = "Clave API configurada";
+"zai.settings.checking" = "Conectando con z.ai…";
+"zai.settings.connected" = "z.ai conectado";
+"zai.settings.error_state" = "Error de conexión con z.ai";
+"zai.settings.refresh" = "Actualizar ahora";
+"zai.settings.plan" = "Plan";
+"zai.settings.privacy" = "La clave API se guarda en tu llavero de macOS y solo se envía a api.z.ai por HTTPS.";
+"zai.onboarding.title" = "Plan GLM Coding de Z.ai";
+"zai.onboarding.optional" = "¿Usas un GLM Coding Plan? Crea un perfil de Z.ai GLM más tarde en Ajustes → Gestionar perfiles.";
+"zai.onboarding.open_console" = "Obtener clave API";
+"zai.window.session" = "Ventana de créditos de 5 horas";
+"zai.window.weekly" = "Ventana de créditos semanal";
+"zai.window.tools_title" = "Herramientas web";
+"zai.window.tools" = "Llamadas mensuales a Vision, Web Search y Reader";
+
+
+// Provider integration and account recovery
+"codex.connection_source" = "Connection source";
+"codex.connection_http" = "HTTP credentials";
+"codex.connection_cli" = "Local CLI or SSH";
+"profiles.storage_error.title" = "Accounts could not be loaded safely";
+"profiles.storage_error.description" = "Your original account data has been preserved. Check the storage error and migration backup before continuing.";
+"settings.updates.integration_disabled" = "Updates are paused for this build to protect Codex connections and GLM accounts. A compatible update channel is required before updates can resume.";

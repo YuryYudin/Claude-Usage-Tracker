@@ -108,6 +108,7 @@ struct UpdatesSettingsView: View {
                             Spacer()
                             Toggle("", isOn: $autoUpdateEnabled)
                                 .labelsHidden()
+                                .disabled(!UpdateManager.updatesAvailable)
                                 .onChange(of: autoUpdateEnabled) { _, newValue in
                                     updateManager.setAutomaticChecksEnabled(newValue)
                                 }
@@ -143,7 +144,7 @@ struct UpdatesSettingsView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("settings.updates.info.title".localized)
                             .font(DesignTokens.Typography.body)
-                        Text("settings.updates.info.description".localized)
+                        Text((UpdateManager.updatesAvailable ? "settings.updates.info.description" : "settings.updates.integration_disabled").localized)
                             .font(DesignTokens.Typography.caption)
                             .foregroundColor(.secondary)
                             .fixedSize(horizontal: false, vertical: true)

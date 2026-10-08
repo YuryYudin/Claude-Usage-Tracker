@@ -29,6 +29,12 @@ struct Profile: Codable, Identifiable, Equatable {
     /// When nil, Codex profiles read the auth.json file live. Secret — stored in
     /// the Keychain, excluded from the plist like the other credential fields.
     var codexCredentialsJSON: String?
+    // nil selects upstream HTTP. Existing fork profiles retain their CLI target.
+    var codexConfiguration: CodexProfileConfiguration?
+    var codexUsage: CodexUsage?
+    var zaiConfiguration: ZAIProfileConfiguration
+    var zaiUsage: ZAIUsage?
+    var zaiAPIKey: String?
 
     // MARK: - CLI Account Sync Metadata
     var hasCliAccount: Bool
@@ -89,6 +95,11 @@ struct Profile: Codable, Identifiable, Equatable {
         apiSessionKeyExpiry: Date? = nil,
         cliCredentialsJSON: String? = nil,
         codexCredentialsJSON: String? = nil,
+        codexConfiguration: CodexProfileConfiguration? = nil,
+        codexUsage: CodexUsage? = nil,
+        zaiConfiguration: ZAIProfileConfiguration = ZAIProfileConfiguration(),
+        zaiUsage: ZAIUsage? = nil,
+        zaiAPIKey: String? = nil,
         hasCliAccount: Bool = false,
         cliAccountSyncedAt: Date? = nil,
         customKeychainServiceName: String? = nil,
@@ -115,6 +126,11 @@ struct Profile: Codable, Identifiable, Equatable {
         self.apiSessionKeyExpiry = apiSessionKeyExpiry
         self.cliCredentialsJSON = cliCredentialsJSON
         self.codexCredentialsJSON = codexCredentialsJSON
+        self.codexConfiguration = codexConfiguration
+        self.codexUsage = codexUsage
+        self.zaiConfiguration = zaiConfiguration
+        self.zaiUsage = zaiUsage
+        self.zaiAPIKey = zaiAPIKey?.nilIfBlank
         self.hasCliAccount = hasCliAccount
         self.cliAccountSyncedAt = cliAccountSyncedAt
         self.customKeychainServiceName = customKeychainServiceName
@@ -139,13 +155,14 @@ struct Profile: Codable, Identifiable, Equatable {
     /// write fails during save — never in the normal persistence path.
     static let includeSecretsKey = CodingUserInfoKey(rawValue: "profileIncludeSecrets")!
 
-    private enum CodingKeys: String, CodingKey {
+    enum CodingKeys: String, CodingKey, CaseIterable {
         case id, name
         case provider
         case claudeSessionKey, organizationId
         case apiSessionKey, apiOrganizationId, apiSessionKeyExpiry
         case cliCredentialsJSON
-        case codexCredentialsJSON
+        case codexCredentialsJSON, codexConfiguration, codexUsage
+        case zaiConfiguration, zaiUsage, zaiAPIKey
         case hasCliAccount, cliAccountSyncedAt
         case customKeychainServiceName
         case terminalLauncherSlug
@@ -162,10 +179,9 @@ struct Profile: Codable, Identifiable, Equatable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(UUID.self, forKey: .id)
         name = try c.decode(String.self, forKey: .name)
-        // Pre-provider profiles have no key; an unknown raw value (written by a
-        // FUTURE app version with more providers) must degrade to .anthropic,
-        // never throw — a throw here wipes the whole profile list.
-        provider = (try? c.decodeIfPresent(Provider.self, forKey: .provider)) ?? .anthropic
+        // Missing provider means a legacy Claude account. Unknown string providers
+        // remain unsupported; malformed records block loading without overwriting the store.
+        provider = try c.decodeIfPresent(Provider.self, forKey: .provider) ?? .anthropic
         // Secrets: present only in legacy (pre-Keychain-migration) plists; hydrated
         // from the Keychain by ProfileStore after decoding.
         claudeSessionKey = try c.decodeIfPresent(String.self, forKey: .claudeSessionKey)
@@ -175,6 +191,11 @@ struct Profile: Codable, Identifiable, Equatable {
         apiSessionKeyExpiry = try c.decodeIfPresent(Date.self, forKey: .apiSessionKeyExpiry)
         cliCredentialsJSON = try c.decodeIfPresent(String.self, forKey: .cliCredentialsJSON)
         codexCredentialsJSON = try c.decodeIfPresent(String.self, forKey: .codexCredentialsJSON)
+        codexConfiguration = try c.decodeIfPresent(CodexProfileConfiguration.self, forKey: .codexConfiguration)
+        codexUsage = try? c.decodeIfPresent(CodexUsage.self, forKey: .codexUsage)
+        zaiConfiguration = try c.decodeIfPresent(ZAIProfileConfiguration.self, forKey: .zaiConfiguration) ?? ZAIProfileConfiguration()
+        zaiUsage = try? c.decodeIfPresent(ZAIUsage.self, forKey: .zaiUsage)
+        zaiAPIKey = try c.decodeIfPresent(String.self, forKey: .zaiAPIKey)
         hasCliAccount = try c.decodeIfPresent(Bool.self, forKey: .hasCliAccount) ?? false
         cliAccountSyncedAt = try c.decodeIfPresent(Date.self, forKey: .cliAccountSyncedAt)
         customKeychainServiceName = try c.decodeIfPresent(String.self, forKey: .customKeychainServiceName)
@@ -186,6 +207,7 @@ struct Profile: Codable, Identifiable, Equatable {
         claudeUsage = (try? c.decodeIfPresent(ClaudeUsage.self, forKey: .claudeUsage)) ?? nil
         apiUsage = (try? c.decodeIfPresent(APIUsage.self, forKey: .apiUsage)) ?? nil
         iconConfig = try c.decodeIfPresent(MenuBarIconConfiguration.self, forKey: .iconConfig) ?? .default
+        iconConfig.migrateLegacyMetrics(for: provider)
         refreshInterval = try c.decodeIfPresent(TimeInterval.self, forKey: .refreshInterval) ?? 30.0
         autoStartSessionEnabled = try c.decodeIfPresent(Bool.self, forKey: .autoStartSessionEnabled) ?? false
         checkOverageLimitEnabled = try c.decodeIfPresent(Bool.self, forKey: .checkOverageLimitEnabled) ?? true
@@ -200,6 +222,10 @@ struct Profile: Codable, Identifiable, Equatable {
         try c.encode(id, forKey: .id)
         try c.encode(name, forKey: .name)
         try c.encode(provider, forKey: .provider)
+        try c.encodeIfPresent(codexConfiguration, forKey: .codexConfiguration)
+        try c.encodeIfPresent(codexUsage, forKey: .codexUsage)
+        try c.encode(zaiConfiguration, forKey: .zaiConfiguration)
+        try c.encodeIfPresent(zaiUsage, forKey: .zaiUsage)
         // Credentials live in the Keychain (per-profile items), NOT in the plist.
         // The plist on disk is world-readable cleartext — see #267.
         if (encoder.userInfo[Profile.includeSecretsKey] as? Bool) == true {
@@ -207,6 +233,7 @@ struct Profile: Codable, Identifiable, Equatable {
             try c.encodeIfPresent(apiSessionKey, forKey: .apiSessionKey)
             try c.encodeIfPresent(cliCredentialsJSON, forKey: .cliCredentialsJSON)
             try c.encodeIfPresent(codexCredentialsJSON, forKey: .codexCredentialsJSON)
+            try c.encodeIfPresent(zaiAPIKey, forKey: .zaiAPIKey)
         }
         try c.encodeIfPresent(organizationId, forKey: .organizationId)
         try c.encodeIfPresent(apiOrganizationId, forKey: .apiOrganizationId)
@@ -246,7 +273,12 @@ struct Profile: Codable, Identifiable, Equatable {
         case .anthropic:
             return hasClaudeAI || hasAPIConsole || hasValidCLIOAuth
         case .codex:
+            if let codexConfiguration { return codexConfiguration.validationError == nil }
             return codexCredentialsJSON != nil || CodexAuthService.shared.authFileExists()
+        case .zai:
+            return zaiAPIKey != nil
+        case .unsupported:
+            return false
         }
     }
 
@@ -261,7 +293,12 @@ struct Profile: Codable, Identifiable, Equatable {
         case .anthropic:
             return hasClaudeAI || hasAPIConsole || cliCredentialsJSON != nil || customKeychainServiceName != nil
         case .codex:
+            if let codexConfiguration { return codexConfiguration.validationError == nil }
             return codexCredentialsJSON != nil || CodexAuthService.shared.authFileExists()
+        case .zai:
+            return zaiAPIKey != nil
+        case .unsupported:
+            return false
         }
     }
 }

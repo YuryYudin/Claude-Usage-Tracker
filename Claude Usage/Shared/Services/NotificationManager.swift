@@ -13,14 +13,58 @@ class NotificationManager: NotificationServiceProtocol {
     // Persisted to UserDefaults to survive app restarts
     private var sentNotifications: Set<String> {
         get {
-            Set(UserDefaults.standard.array(forKey: "sentNotifications") as? [String] ?? [])
+            Set(UserDefaults.appStorage.array(forKey: "sentNotifications") as? [String] ?? [])
         }
         set {
-            UserDefaults.standard.set(Array(newValue), forKey: "sentNotifications")
+            UserDefaults.appStorage.set(Array(newValue), forKey: "sentNotifications")
         }
     }
 
     private init() {}
+
+    /// Names are presentation only; quota/reset identity controls deduplication.
+    func checkAndNotify(usage: ClaudeUsage, profileID: UUID, profileName: String,
+                        settings: NotificationSettings) {
+        guard settings.enabled else { return }
+        if usage.quotaWindows == nil, usage.sessionAvailable != false {
+            checkSessionNotifications(usage: usage, profileName: profileName,
+                identity: profileID.uuidString, settings: settings)
+            return
+        }
+        let quota = usage.primaryQuota
+        guard quota != nil || usage.sessionAvailable != false else { return }
+        let percentage = quota?.effectivePercentage ?? usage.effectiveSessionPercentage
+        let reset = quota?.resetTime ?? (quota == nil ? usage.sessionResetTime : nil)
+        let base = "quota_\(profileID)_\(quota?.id ?? "session")_"
+        if percentage == 0, (previousSessionPercentages[base] ?? 0) > 0 {
+            sentNotifications = sentNotifications.filter { !$0.hasPrefix(base) }
+        }
+        previousSessionPercentages[base] = percentage
+        guard let threshold = settings.sortedThresholds.reversed().first(where: { percentage >= Double($0) }) else { return }
+        let window = reset.map { String(Int64($0.timeIntervalSince1970)) } ?? "unknown"
+        let prefix = "\(base)\(window)_"
+        let identifier = "\(prefix)\(threshold)"
+        guard !sentNotifications.contains(identifier) else { return }
+        var sent = sentNotifications.filter { !$0.hasPrefix(base) || $0.hasPrefix(prefix) }
+        sent.insert(identifier)
+        sentNotifications = sent
+        let content = UNMutableNotificationContent()
+        content.title = "\(profileName) — \(Int(percentage.rounded()))%"
+        content.body = quota?.label ?? "menubar.session_usage".localized
+        if let reset { content.body += " · \(reset.formatted(date: .abbreviated, time: .shortened))" }
+        if settings.soundName == "default" { content.sound = .default }
+        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: identifier, content: content, trigger: nil)) { error in
+            Task { @MainActor in
+                if error != nil {
+                    var sent = self.sentNotifications
+                    sent.remove(identifier)
+                    self.sentNotifications = sent
+                } else if settings.soundName != "default", settings.soundName != "none" {
+                    NSSound(named: NSSound.Name(settings.soundName))?.play()
+                }
+            }
+        }
+    }
 
     /// Sends a notification when approaching usage limits (legacy method)
     func sendUsageAlert(type: AlertType, percentage: Double, resetTime: Date?) {
@@ -123,21 +167,26 @@ class NotificationManager: NotificationServiceProtocol {
 
     /// Checks usage and sends appropriate alerts (profile-aware)
     func checkAndNotify(usage: ClaudeUsage, profileName: String, settings: NotificationSettings) {
+        checkSessionNotifications(usage: usage, profileName: profileName, identity: profileName, settings: settings)
+    }
+
+    private func checkSessionNotifications(usage: ClaudeUsage, profileName: String,
+                                           identity: String, settings: NotificationSettings) {
         // Check if notifications are enabled for this profile
         guard settings.enabled else {
             return
         }
 
         let sessionPercentage = usage.effectiveSessionPercentage
-        let previousPercentage = previousSessionPercentages[profileName] ?? 0.0
+        let previousPercentage = previousSessionPercentages[identity] ?? 0.0
 
         // Check for session reset (went from >0% to 0%)
         if previousPercentage > 0.0 && sessionPercentage == 0.0 {
             // Clear all sent notifications for this profile to allow re-notification in new session
-            sentNotifications = sentNotifications.filter { !$0.hasPrefix(profileName) }
+            sentNotifications = sentNotifications.filter { !$0.hasPrefix(identity + "_") }
 
             sendProfileAlert(
-                profileName: profileName,
+                profileName: profileName, notificationKey: identity,
                 type: .sessionReset,
                 percentage: sessionPercentage,
                 resetTime: usage.sessionResetTime,
@@ -148,7 +197,7 @@ class NotificationManager: NotificationServiceProtocol {
         }
 
         // Update previous percentage for this specific profile
-        previousSessionPercentages[profileName] = sessionPercentage
+        previousSessionPercentages[identity] = sessionPercentage
 
         // Check thresholds (highest first) - includes both built-in and custom
         let thresholds = settings.sortedThresholds
@@ -164,7 +213,7 @@ class NotificationManager: NotificationServiceProtocol {
                     alertType = .sessionInfo
                 }
                 sendProfileAlert(
-                    profileName: profileName,
+                    profileName: profileName, notificationKey: identity,
                     type: alertType,
                     percentage: sessionPercentage,
                     thresholdLevel: threshold,
@@ -194,12 +243,12 @@ class NotificationManager: NotificationServiceProtocol {
     }
 
     /// Sends a profile-specific usage alert
-    private func sendProfileAlert(profileName: String, type: AlertType, percentage: Double, thresholdLevel: Int? = nil, resetTime: Date?, soundName: String = "default") {
+    private func sendProfileAlert(profileName: String, notificationKey: String? = nil, type: AlertType, percentage: Double, thresholdLevel: Int? = nil, resetTime: Date?, soundName: String = "default") {
         // Use the configured threshold level (not current percentage) to prevent duplicate notifications
         let level = thresholdLevel ?? Int(percentage)
 
         // Create unique identifier based on alert type and threshold level
-        let identifier = "\(profileName)_\(type.rawValue)_\(level)"
+        let identifier = "\(notificationKey ?? profileName)_\(type.rawValue)_\(level)"
 
         // Check if we've already sent this notification
         guard !sentNotifications.contains(identifier) else {

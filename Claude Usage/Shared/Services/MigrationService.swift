@@ -17,7 +17,7 @@ class MigrationService {
 
     /// Checks if migration has already been completed
     func hasMigrated() -> Bool {
-        return UserDefaults.standard.bool(forKey: migrationKey)
+        return UserDefaults.appStorage.bool(forKey: migrationKey)
     }
 
     /// Checks if we should show the migration option (without triggering TCC dialog)
@@ -37,7 +37,7 @@ class MigrationService {
         // Try to access old App Group UserDefaults
         guard let oldDefaults = UserDefaults(suiteName: Constants.appGroupIdentifier) else {
             LoggingService.shared.log("MigrationService: No App Group data found")
-            UserDefaults.standard.set(true, forKey: migrationKey)
+            UserDefaults.appStorage.set(true, forKey: migrationKey)
             return 0
         }
 
@@ -47,14 +47,14 @@ class MigrationService {
 
         // Copy all data to standard UserDefaults
         for (key, value) in oldData {
-            UserDefaults.standard.set(value, forKey: key)
+            UserDefaults.appStorage.set(value, forKey: key)
         }
 
         // Synchronize to ensure data is written
-        UserDefaults.standard.synchronize()
+        UserDefaults.appStorage.synchronize()
 
         // Mark migration as complete
-        UserDefaults.standard.set(true, forKey: migrationKey)
+        UserDefaults.appStorage.set(true, forKey: migrationKey)
 
         LoggingService.shared.log("MigrationService: ✅ Successfully migrated \(oldData.count) keys from App Group")
 
@@ -66,15 +66,15 @@ class MigrationService {
         LoggingService.shared.log("MigrationService: Resetting app data...")
 
         // Get all keys from standard UserDefaults
-        let allKeys = UserDefaults.standard.dictionaryRepresentation().keys
+        let allKeys = UserDefaults.appStorage.dictionaryRepresentation().keys
 
         // Remove all keys
         for key in allKeys {
-            UserDefaults.standard.removeObject(forKey: key)
+            UserDefaults.appStorage.removeObject(forKey: key)
         }
 
         // Synchronize
-        UserDefaults.standard.synchronize()
+        UserDefaults.appStorage.synchronize()
 
         LoggingService.shared.log("MigrationService: ✅ App data reset complete (\(allKeys.count) keys removed)")
     }

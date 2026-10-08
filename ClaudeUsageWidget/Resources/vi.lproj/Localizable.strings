@@ -1,0 +1,9 @@
+"widget.no_data" = "Mở Claude Usage để tải dữ liệu sử dụng";
+"widget.session" = "Phiên";
+"widget.weekly" = "Hàng tuần";
+"widget.session.name" = "Mức sử dụng phiên";
+"widget.session.desc" = "Mức sử dụng hạn mức được chọn của hồ sơ đang hoạt động.";
+"widget.overview.name" = "Tổng quan sử dụng";
+"widget.overview.desc" = "Mức sử dụng hạn mức của các hồ sơ được hiển thị.";
+"widget.tools" = "Lượt gọi công cụ";
+"widget.quota" = "Quota";

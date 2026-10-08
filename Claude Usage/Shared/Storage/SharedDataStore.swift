@@ -82,7 +82,7 @@ class SharedDataStore {
 
     init() {
         // Use standard UserDefaults (app container)
-        self.defaults = UserDefaults.standard
+        self.defaults = UserDefaults.appStorage
         LoggingService.shared.log("SharedDataStore: Using standard app container storage")
     }
 

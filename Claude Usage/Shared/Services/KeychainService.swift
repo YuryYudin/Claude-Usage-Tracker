@@ -173,6 +173,7 @@ class KeychainService {
         case apiSessionKey = "api-session-key"
         case cliCredentialsJSON = "cli-credentials"
         case codexCredentialsJSON = "codex-credentials"
+        case zaiAPIKey = "zai-api-key"
     }
 
     /// Single service for all per-profile secrets; the account encodes profile + field.

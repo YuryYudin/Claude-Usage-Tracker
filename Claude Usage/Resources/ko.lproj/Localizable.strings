@@ -275,8 +275,6 @@
 /* ==================== */
 /* MARK: - Setup Wizard */
 /* ==================== */
-"setup.step.enter_session_key" = "키 입력";
-"wizard.test_connection" = "연결 테스트";
 "wizard.select_org_title" = "어떤 조직을 추적하시겠습니까?";
 "wizard.select_org_subtitle" = "사용량 모니터링을 위한 Claude 조직 선택";
 "wizard.config_summary" = "설정 요약";
@@ -338,9 +336,6 @@
 /* ==================== */
 /* MARK: - Additional Keys */
 /* ==================== */
-"api.single_organization" = "단일 조직을 찾아 자동으로 선택했습니다";
-"claudecode.button_apply" = "적용";
-"claudecode.button_reset" = "재설정";
 "claudecode.component_profile" = "프로필 이름";
 "claudecode.context_info" = "컨텍스트가 100% 대신 ~80-95%로 표시될 수 있습니다. Claude는 한도에 도달하기 전에 자동으로 압축하며, 출력 토큰도 컨텍스트 공간을 사용합니다.";
 "claudecode.element_colors_title" = "요소 색상";
@@ -358,11 +353,6 @@
 "claudecode.element_color_weekly_desc" = "주간 사용량 그라디언트를 고정 색상으로 대체";
 "claudecode.element_color_extra" = "추가 사용량";
 "claudecode.element_color_extra_desc" = "추가 사용량(비용) 그라디언트를 고정 색상으로 대체";
-"error.generic" = "오류: %@";
-"personal.button_saving" = "저장 중...";
-"personal.button_setup_wizard" = "설정 마법사";
-"personal.button_open_claude" = "claude.ai 열기";
-"personal.success_key_saved" = "세션 키가 성공적으로 저장되었습니다";
 
 /* ==================== */
 /* MARK: - Personal Usage */
@@ -467,23 +457,16 @@
 /* ==================== */
 /* MARK: - Claude CLI (Additional) */
 /* ==================== */
-"claudecode.title" = "Claude CLI 통합";
 "claudecode.description" = "터미널 상태 표시줄에 사용 정보 표시";
 "claudecode.coming_soon" = "출시 예정";
 "claudecode.features_description" = "터미널 상태 표시줄 표시를 위한 Claude Code CLI와의 통합은 향후 업데이트에서 제공됩니다.";
-"claudecode.subtitle" = "터미널 상태 표시줄 디스플레이 사용자 지정";
 "claudecode.preview_label" = "라이브 미리보기";
 "claudecode.preview_description" = "Claude CLI에서 상태 표시줄이 표시되는 방법입니다";
 "claudecode.component_model" = "모델 이름";
 "claudecode.component_context" = "컨텍스트 사용률";
 "claudecode.component_context_tokens" = "토큰으로 표시 (% 대신)";
-"claudecode.component_directory" = "디렉토리 이름";
-"claudecode.component_branch" = "Git 브랜치";
-"claudecode.component_usage" = "사용 통계";
-"claudecode.component_progressbar" = "진행률 표시줄";
 "claudecode.component_pace_marker" = "페이스 마커";
 "claudecode.pace_marker_info" = "경과 시간 위치에 색상 표시를 보여줍니다";
-"claudecode.component_resettime" = "리셋 시간";
 "claudecode.component_weekly" = "주간 사용량 표시";
 "claudecode.component_weekly_description" = "막대 및 초기화 시간이 포함된 주간 토큰 사용량";
 "claudecode.component_extra_usage" = "추가 사용량 표시";
@@ -511,7 +494,6 @@
 "about.check_updates" = "업데이트 확인";
 "about.copyright" = "© 2025 Hamed Elfayome";
 "about.mit_license" = "MIT 라이선스 • 오픈 소스";
-"about.run_setup_wizard" = "설정 마법사 실행";
 
 /* ==================== */
 /* MARK: - UI Labels */
@@ -671,15 +653,6 @@
 /* ==================== */
 /* MARK: - Updates Settings (Additional) */
 /* ==================== */
-"settings.updates.title" = "소프트웨어 업데이트";
-"settings.updates.current_version" = "현재 버전";
-"settings.updates.last_check" = "마지막 확인";
-"settings.updates.never_checked" = "확인 안 함";
-"settings.updates.automatic" = "자동 업데이트";
-"settings.updates.automatic.description" = "매일 자동으로 업데이트 확인 및 다운로드";
-"settings.updates.check_now" = "업데이트 확인";
-"settings.updates.info.title" = "안전한 업데이트";
-"settings.updates.info.description" = "모든 업데이트는 암호화 서명되어 설치 전에 검증됩니다";
 
 /* ==================== */
 /* MARK: - Setup Wizard (Additional) */
@@ -770,10 +743,8 @@
 "wizard.migrate_old_data" = "이전 버전의 데이터가 있나요?";
 "wizard.migrate_description" = "이전 버전이 설치되어 있었다면, 아래를 클릭하여 이전 프로필과 설정을 가져오세요. 데이터에 액세스하려면 시스템 권한이 필요합니다.";
 "wizard.migrate_button" = "데이터 마이그레이션";
-"wizard.skip_migration" = "건너뛰기";
 "wizard.migration_success" = "✅ %d개 항목을 성공적으로 마이그레이션했습니다";
 "wizard.migration_failed" = "⚠️ 마이그레이션 실패: %@";
-"wizard.migration_skipped" = "마이그레이션을 건너뛰었습니다. 나중에 이전 데이터를 수동으로 동기화할 수 있습니다.";
 "about.reset_app_data" = "앱 데이터 재설정";
 "about.reset_confirmation_title" = "모든 앱 데이터를 재설정하시겠습니까?";
 "about.reset_confirm" = "재설정";
@@ -798,7 +769,6 @@
 "history.chart.session_title" = "세션 사용 기록";
 "history.chart.weekly_title" = "주간 사용 추세";
 "history.chart.billing_title" = "월간 API 지출";
-"history.chart.now" = "지금";
 "history.empty.session_title" = "세션 기록 없음";
 "history.empty.session_description" = "5시간마다 재설정 후 세션 사용량이 기록됩니다";
 "history.empty.weekly_title" = "주간 기록 없음";
@@ -1102,3 +1072,106 @@
 "support.popup_signature" = "Claude Usage를 혼자 만드는 1인 팀";
 "support.popup_body" = "무료, 오픈소스, 1인 개발 — 광고도 추적도 없습니다. 세션 한도를 태우는 걸 막아준 적이 있다면, 커피 한 잔이 개발을 이어가게 합니다.";
 "support.popup_days" = "%d일째 당신의 한도를 지키는 중 — 언제나 무료";
+
+// Additional provider connections and quotas
+
+"codex.settings.nav_title" = "OpenAI Codex";
+"codex.settings.nav_desc" = "Codex 사용량 모니터링 구성";
+"codex.settings.title" = "OpenAI Codex";
+"codex.settings.subtitle" = "이 프로필의 로컬 또는 SSH Codex 연결과 사용량 표시 구성";
+"codex.settings.monitoring_title" = "모니터링";
+"codex.settings.monitoring_desc" = "Codex 사용량은 이 프로필에 속하며 앱의 프로필 설정을 공유합니다.";
+"codex.settings.monitoring_toggle" = "Codex 사용량 모니터링";
+"codex.settings.monitoring_toggle_desc" = "사용량을 새로 고칠 때 이 프로필의 로컬 또는 SSH Codex app-server를 실행합니다.";
+"codex.settings.connection_title" = "연결";
+"codex.settings.connection_desc" = "이 Mac에서 Codex를 사용하거나 SSH 호스트 별칭을 통해 연결합니다.";
+"codex.settings.executable" = "Codex 실행 파일";
+"codex.settings.executable_auto" = "codex 자동 감지";
+"codex.settings.choose" = "선택";
+"codex.settings.auto" = "자동";
+"codex.settings.account" = "계정";
+"codex.settings.show_email" = "계정 이메일 표시";
+"codex.settings.show_email_desc" = "설정에 로그인된 Codex 계정의 이메일 주소를 표시합니다.";
+"codex.settings.last_refresh" = "마지막으로 새로 고친 시간";
+"codex.settings.recheck" = "다시 확인";
+"codex.settings.refresh" = "지금 새로 고침";
+"codex.settings.setup_title" = "설정 안내";
+"codex.settings.setup_desc" = "선택한 컴퓨터에 Codex를 설치하고 로그인하세요. SSH 프로필에는 비대화형 연결이 필요합니다.";
+"codex.settings.open_docs" = "Codex 문서 열기";
+"codex.settings.tray_title" = "메뉴 막대";
+"codex.settings.tray_desc" = "Codex 제공자 아이콘과 사용량 구간을 사용자화합니다.";
+"codex.settings.multi_profile_hint" = "Codex는 별도의 제공자 프로필입니다. 다중 프로필 모드에서 표시하려면 프로필 관리에서 선택하세요.";
+"codex.settings.bucket" = "메뉴 막대 사용량 제한 구간";
+"codex.settings.bucket_desc" = "이 프로필의 메뉴 막대 아이콘과 알림에 사용할 Codex 제한을 선택합니다.";
+"codex.settings.automatic" = "자동";
+"codex.settings.notifications_title" = "알림";
+"codex.settings.notifications_desc" = "선택한 Codex 사용량 제한 구간이 임계값을 넘으면 알립니다.";
+"codex.settings.notifications_toggle" = "Codex 사용량 알림";
+"codex.settings.notifications_toggle_desc" = "각 사용량 제한 기간에 임계값별로 한 번 알림을 보냅니다.";
+"codex.settings.usage_title" = "사용량 데이터";
+"codex.settings.usage_desc" = "이 프로필의 Codex app-server 연결에서 반환된 사용량입니다.";
+"codex.settings.credits" = "크레딧";
+"codex.settings.unlimited" = "무제한";
+"codex.settings.available" = "사용 가능";
+"codex.settings.lifetime_tokens" = "누적 토큰";
+"codex.settings.privacy" = "인증은 선택한 컴퓨터의 Codex CLI에서 관리됩니다. SSH 자격 증명은 OpenSSH에서 관리되며, 이 앱은 Codex 자격 증명 파일을 읽거나 SSH 개인 키를 저장하지 않습니다.";
+"codex.settings.no_usage" = "아직 Codex 사용량을 불러오지 않았습니다.";
+"codex.settings.checking" = "Codex 설치 확인 중…";
+"codex.settings.not_installed" = "Codex CLI를 찾을 수 없음";
+"codex.settings.signed_out" = "Codex CLI에서 로그아웃됨";
+"codex.settings.connected" = "Codex 연결됨";
+"codex.settings.copy" = "명령 복사";
+"codex.settings.choose_title" = "Codex 실행 파일 선택";
+"codex.settings.choose_message" = "codex 명령줄 실행 파일을 선택하세요.";
+"codex.settings.experimental_note" = "Codex app-server는 실험적 통합 기능입니다. 원격 프로필은 암호화된 SSH stdio 연결을 사용하며 app-server를 네트워크 서비스로 노출하지 않습니다.";
+"codex.onboarding.title" = "OpenAI Codex 사용량";
+"codex.onboarding.detected" = "Codex CLI가 감지되었습니다. 설정을 마친 후 설정 → 프로필 관리에서 OpenAI Codex 프로필을 만드세요.";
+"codex.onboarding.optional" = "나중에 설정 → 프로필 관리에서 로컬 또는 SSH Codex 프로필을 만들 수도 있습니다.";
+"codex.onboarding.copy_command" = "설정 명령 복사";
+"zai.settings.nav_title" = "Z.ai GLM";
+"zai.settings.nav_desc" = "Z.ai GLM 코딩 플랜 사용량 모니터링 구성";
+"zai.settings.title" = "Z.ai GLM";
+"zai.settings.subtitle" = "z.ai API 키로 이 프로필의 GLM 코딩 플랜 할당량을 추적합니다";
+"zai.settings.connection_title" = "연결";
+"zai.settings.connection_desc" = "활성 GLM 코딩 플랜이 있는 z.ai API 키를 붙여넣으세요.";
+"zai.settings.api_key" = "z.ai API 키";
+"zai.settings.api_key_help" = "z.ai → API Keys에서 API 키를 만드세요. 코딩 플랜 키는 5시간·주간·도구 할당량을 보고합니다. 키는 키체인에 저장됩니다.";
+"zai.settings.api_key_placeholder" = "z.ai API 키 붙여넣기";
+"zai.settings.api_key_placeholder_keep" = "새 z.ai API 키 입력";
+"zai.settings.save_key" = "키 저장";
+"zai.settings.replace_key" = "교체";
+"zai.settings.remove_key" = "제거";
+"zai.settings.setup_title" = "설정 가이드";
+"zai.settings.setup_desc" = "GLM 코딩 플랜을 구독하고 API 키를 만드세요.";
+"zai.settings.setup_steps" = "1. z.ai에서 GLM 코딩 플랜(Lite/Pro/Max)을 구독하세요.\n2. API Keys에서 API 키를 만드세요.\n3. 위에 키를 붙여넣으면 프로필 간격에 따라 할당량이 자동 갱신됩니다.";
+"zai.settings.open_docs" = "플랜 문서 열기";
+"zai.settings.open_console" = "z.ai 콘솔 열기";
+"zai.settings.bucket" = "메뉴 막대 할당량";
+"zai.settings.bucket_desc" = "이 프로필의 메뉴 막대 아이콘과 알림에 사용할 z.ai 할당량을 선택합니다.";
+"zai.settings.usage_title" = "사용량 데이터";
+"zai.settings.usage_desc" = "이 프로필의 API 키에 대해 z.ai 모니터 API가 보고하는 할당량입니다.";
+"zai.settings.no_usage" = "아직 z.ai 사용량이 로드되지 않았습니다.";
+"zai.settings.no_key" = "z.ai API 키가 구성되지 않음";
+"zai.settings.key_configured" = "API 키 구성됨";
+"zai.settings.checking" = "z.ai에 연결 중…";
+"zai.settings.connected" = "z.ai 연결됨";
+"zai.settings.error_state" = "z.ai 연결 오류";
+"zai.settings.refresh" = "지금 새로 고침";
+"zai.settings.plan" = "플랜";
+"zai.settings.privacy" = "API 키는 macOS 키체인에 저장되며 HTTPS로 api.z.ai에만 전송됩니다.";
+"zai.onboarding.title" = "Z.ai GLM 코딩 플랜";
+"zai.onboarding.optional" = "GLM 코딩 플랜을 사용 중인가요? 나중에 설정 → 프로필 관리에서 Z.ai GLM 프로필을 만들 수 있습니다.";
+"zai.onboarding.open_console" = "API 키 받기";
+"zai.window.session" = "5시간 크레딧 창";
+"zai.window.weekly" = "주간 크레딧 창";
+"zai.window.tools_title" = "웹 도구";
+"zai.window.tools" = "월간 Vision, Web Search, Reader 호출";
+
+
+// Provider integration and account recovery
+"codex.connection_source" = "Connection source";
+"codex.connection_http" = "HTTP credentials";
+"codex.connection_cli" = "Local CLI or SSH";
+"profiles.storage_error.title" = "Accounts could not be loaded safely";
+"profiles.storage_error.description" = "Your original account data has been preserved. Check the storage error and migration backup before continuing.";
+"settings.updates.integration_disabled" = "Updates are paused for this build to protect Codex connections and GLM accounts. A compatible update channel is required before updates can resume.";
