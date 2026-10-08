@@ -7,6 +7,10 @@ final class OAuthRefreshCoordinator<Value> {
     private var inFlight: [String: Task<Value, Error>] = [:]
     private var rotations: [String: Value] = [:]
 
+    // Explicit destruction avoids Swift 6.3.3 inlining a synthesized isolated
+    // generic deinitializer incorrectly in optimized builds. No cleanup uses actor state.
+    nonisolated deinit {}
+
     init(rotatedToken: @escaping (Value) -> String?) { self.rotatedToken = rotatedToken }
 
     func value(for token: String, operation: @escaping () async throws -> Value) async throws -> Value {
