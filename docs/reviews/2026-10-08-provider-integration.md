@@ -228,6 +228,17 @@ remain the supported acceptance path when existing credentials are Keychain-only
 The helper also accepts `--identity` for packaging on a machine with an installed
 certificate; notarization remains separate.
 
+The user subsequently supplied the working installation's signature: ad-hoc,
+hardened runtime, no Team ID, bundle identifier `HamedElfayome.Claude-Usage`.
+The reviewed old fork exclusively attempts data-protection profile Keychain
+storage and retains inline secrets when that store is unavailable. The candidate
+retains the same ad-hoc inline fallback. A Developer ID certificate is therefore
+not a prerequisite for upgrading this reviewed ad-hoc setup. Actual stored
+credential provenance is still not established by signing metadata alone.
+`release/Claude-Usage-3.3.0-integration-a2b9762-local-upgrade.dmg` contains the same
+app binaries with clarified notes and backup commands for the other Mac; its
+signatures, widget entitlements, architectures, and image were reverified.
+
 Sparkle is disabled for this candidate through
 `ProviderIntegrationUpdatesEnabled=false`. The guard covers startup, manual
 checks, and toggling automatic checks without changing the working app's

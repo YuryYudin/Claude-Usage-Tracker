@@ -13,6 +13,14 @@ ad-hoc builds. Credentials still stored inline in legacy profiles are retained
 when Keychain writes are unavailable. Credentials stored only in Keychain may
 be unavailable to this build. Do not assume signing prompts alone fix that.
 
+The working installation was confirmed to be ad-hoc signed with no Team ID.
+The reviewed old fork already falls back to inline profile credentials when its
+exclusive data-protection Keychain access is unavailable in an ad-hoc build.
+The new build preserves this behavior. A Developer ID certificate is not required
+for upgrading that setup. The Keychain-only caveat applies to accounts whose
+credentials were actually moved to Keychain by a different or entitled build;
+signing metadata alone does not inventory the saved credentials.
+
 If macOS blocks opening this local build, Apple's per-app procedure is under
 System Settings > Privacy & Security > Open Anyway. Do not disable Gatekeeper.
 https://support.apple.com/en-gb/102445
@@ -40,13 +48,29 @@ BEFORE REPLACING YOUR WORKING INSTALLATION
    Avoid running the old and new builds together; they share preferences.
 2. Privately back up its preferences and the entire "Claude Usage" Application
    Support folder while it is stopped. Do not delete Keychain items or CLI files.
-3. Confirm where your existing profile credentials live. A matching Developer ID
-   build is needed for the supported existing-Keychain upgrade path; this local
-   DMG does not provide one. If all required credentials are retained inline or
-   CLI-owned, this candidate can be evaluated with those sources.
+3. The reviewed ad-hoc fork uses inline fallback and CLI-owned credentials;
+   this candidate preserves those sources. A certificate-signed build needs to
+   be checked separately if credentials are known to exist only in Keychain.
 4. Replace the app only after preserving the old build and data. Open the
    installed copy, check all six accounts, usage, history, settings and refresh.
    Check widgets from the installed extension and select Extra Large.
+
+BACKUP COMMANDS FOR THE OTHER MAC
+
+Quit Claude Usage first. Run these in Terminal before copying the new app into
+Applications. They create a private backup, without printing credential values:
+
+umask 077
+backup_dir="$HOME/Desktop/Claude-Usage-backup-$(date +%Y%m%d-%H%M%S)"
+mkdir -m 700 "$backup_dir"
+ditto "/Applications/Claude Usage.app" "$backup_dir/Claude Usage.app"
+defaults export HamedElfayome.Claude-Usage "$backup_dir/preferences.plist"
+if [ -d "$HOME/Library/Application Support/Claude Usage" ]; then
+    ditto "$HOME/Library/Application Support/Claude Usage" "$backup_dir/Application Support"
+fi
+
+Confirm the old app and preferences.plist exist in the backup folder before
+replacing the installation. Keep this backup private; it can contain credentials.
 
 ROLLBACK
 
