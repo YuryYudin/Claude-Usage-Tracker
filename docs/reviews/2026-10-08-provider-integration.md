@@ -200,6 +200,34 @@ It is a build artifact, not an installed or distribution-signed release.
 
 ## Production rollout and rollback
 
+### Local DMG prepared on 2026-10-09
+
+`release/Claude-Usage-3.3.0-integration-a2b9762-local.dmg` packages the universal
+Release app at source revision `a2b9762`, including the extra-large widget. The
+10.6 MiB image includes an Applications shortcut and
+[upgrade notes](local-upgrade-notes.txt). `scripts/package_dmg.py` signs only a
+staged copy, in nested-code order, and verifies it before creating the image.
+The original build bundle is unchanged. The image was verified and mounted
+read-only without launching the app: app/widget signatures, both architectures,
+widget entitlements, preferences domain, disabled updater, notes, and shortcut
+were checked. Its checksum is in the adjacent `.dmg.sha256` file.
+
+This package uses a local ad-hoc signature, not Developer ID signing or
+notarization. The inherited `KeychainService.fileBasedFallbackAllowed` requires
+a signing Team ID; this ad-hoc build therefore cannot read existing file-based
+profile Keychain items. Inline secrets survive unavailable writes, and Codex
+CLI-owned sources remain configured. A Keychain-only credential may nevertheless
+be unavailable even though its profile metadata migrates correctly. The old
+items are not deleted on missing hydration. Packaging is not evidence of a
+successful signed account upgrade.
+
+No installed tracker or production preferences were found in the usual locations
+for this build-environment user. The user's six actual accounts could not be
+checked here. A compatible certificate-signed build and live account comparison
+remain the supported acceptance path when existing credentials are Keychain-only.
+The helper also accepts `--identity` for packaging on a machine with an installed
+certificate; notarization remains separate.
+
 Sparkle is disabled for this candidate through
 `ProviderIntegrationUpdatesEnabled=false`. The guard covers startup, manual
 checks, and toggling automatic checks without changing the working app's

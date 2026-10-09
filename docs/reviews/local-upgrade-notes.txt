@@ -1,0 +1,67 @@
+Claude Usage integration build — 2026-10-09
+
+Includes upstream provider integration, retained Codex local/SSH support, GLM/z.ai,
+and the extra-large six-account overview widget. Source revision: a2b9762.
+Version 3.3.0, build 18. Automatic upstream updates are disabled for this candidate.
+
+THIS DMG IS A LOCAL BUILD
+
+The app and embedded code are ad-hoc signed, not Developer ID signed or notarized.
+The signature seals the bundle; it does not grant the old app's Keychain identity.
+The inherited Keychain policy disables file-based login-Keychain access for
+ad-hoc builds. Credentials still stored inline in legacy profiles are retained
+when Keychain writes are unavailable. Credentials stored only in Keychain may
+be unavailable to this build. Do not assume signing prompts alone fix that.
+
+If macOS blocks opening this local build, Apple's per-app procedure is under
+System Settings > Privacy & Security > Open Anyway. Do not disable Gatekeeper.
+https://support.apple.com/en-gb/102445
+
+WHAT THE MIGRATION PRESERVES
+
+The preferences domain remains HamedElfayome.Claude-Usage. Migration accepts the
+fork's profiles_v3 records and keeps IDs, order, active profile, Codex executable,
+home and SSH targets, GLM settings/keys, selected quotas, display configuration,
+refresh intervals, notifications, and usage history. Provider-specific tray
+metrics become the shared usage metric while preserving their display settings.
+Existing Codex CLI accounts are not switched to HTTP.
+
+Before its first compatibility save the app stages a private defaults/history
+backup under ~/Library/Application Support/Claude Usage/migration/:
+  before-provider-integration.plist
+  history/*.json
+The backup contains preferences and history, not a Keychain export. It is not
+overwritten on later launches. Corrupt records, failed backups, and detected
+external changes block saving. Missing credential hydration cannot delete items.
+
+BEFORE REPLACING YOUR WORKING INSTALLATION
+
+1. Quit the working app and keep a copy of its app bundle outside /Applications.
+   Avoid running the old and new builds together; they share preferences.
+2. Privately back up its preferences and the entire "Claude Usage" Application
+   Support folder while it is stopped. Do not delete Keychain items or CLI files.
+3. Confirm where your existing profile credentials live. A matching Developer ID
+   build is needed for the supported existing-Keychain upgrade path; this local
+   DMG does not provide one. If all required credentials are retained inline or
+   CLI-owned, this candidate can be evaluated with those sources.
+4. Replace the app only after preserving the old build and data. Open the
+   installed copy, check all six accounts, usage, history, settings and refresh.
+   Check widgets from the installed extension and select Extra Large.
+
+ROLLBACK
+
+The old fork cannot decode the new "anthropic" provider value. Replacing only
+the app bundle is insufficient; its original metadata format must be restored.
+Do not blindly restore old OAuth token values: refresh may have rotated them.
+Preserve/reconcile the newest credentials by profile ID when restoring metadata.
+Never replace current auth.json, SSH keys, Claude credential files, or Keychain
+items with frozen token snapshots. Changes to accounts need reconciliation too.
+
+VALIDATION AND LIMITS
+
+320 hosted tests: zero failures, two signing-dependent Keychain tests skipped.
+Actual old-fork codecs and synthetic migration/metadata rollback pass. Universal
+arm64/x86_64 app/widget Release build passes; six-account light/dark content
+renders were inspected. Your actual account data was not present in this build
+environment. Live account continuity and installed-widget behavior are not yet
+verified. These checks do not establish a guaranteed seamless production upgrade.
