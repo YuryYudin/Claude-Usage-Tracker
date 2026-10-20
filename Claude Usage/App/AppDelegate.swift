@@ -151,7 +151,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         }
     }
 
-
     private func shouldShowSetupWizard() -> Bool {
         // FORCE SHOW wizard on very first app launch (one-time)
         // This ensures users see the migration option if they have old data
@@ -263,6 +262,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        guard NSClassFromString("XCTestCase") == nil else { return }
+
         // Cleanup
         NotchHookServer.shared.stop()
         NotchHUDController.shared.stop()
