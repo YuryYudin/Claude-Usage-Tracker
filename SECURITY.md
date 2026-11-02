@@ -55,10 +55,10 @@ We'll keep you informed throughout the process and credit you in the security ad
 
 ### Application Signing
 
-- The app is currently **unsigned** (no Apple Developer certificate)
-- macOS Gatekeeper will block the app on first launch
-- Users must manually approve via System Settings → Privacy & Security
-- **This is expected behavior** for community open-source apps
+- This fork's release app and widget use verified ad-hoc signatures.
+- This release is not Developer ID signed or Apple-notarized.
+- If macOS blocks it, approve the specific app through System Settings > Privacy & Security.
+- Download fork releases and SHA-256 checksums from `YuryYudin/Claude-Usage-Tracker`.
 
 ### Network Security
 

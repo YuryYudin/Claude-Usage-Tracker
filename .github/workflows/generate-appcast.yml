@@ -12,6 +12,8 @@ on:
 
 jobs:
   generate-appcast:
+    # Fork releases use the verified local packaging flow in RELEASING.md.
+    if: github.repository == 'hamed-elfayome/Claude-Usage-Tracker'
     runs-on: macos-latest
     timeout-minutes: 15
 

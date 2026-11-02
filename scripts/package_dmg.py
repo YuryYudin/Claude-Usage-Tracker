@@ -71,7 +71,7 @@ def main():
             raise ValueError("unexpected app preferences domain")
         (stage / "Applications").symlink_to("/Applications")
         (stage / "READ BEFORE UPGRADING.txt").write_text(notes)
-        run("hdiutil", "create", "-volname", "Claude Usage Integration", "-srcfolder", stage,
+        run("hdiutil", "create", "-volname", "Claude Usage", "-srcfolder", stage,
             "-format", "UDZO", output)
     run("hdiutil", "verify", output)
     digest = hashlib.sha256(output.read_bytes()).hexdigest()

@@ -7,6 +7,8 @@ on:
 
 jobs:
   release:
+    # Fork releases use the verified local packaging flow in RELEASING.md.
+    if: github.repository == 'hamed-elfayome/Claude-Usage-Tracker'
     name: Build, Sign, Notarize and Release
     runs-on: macos-15
     timeout-minutes: 30

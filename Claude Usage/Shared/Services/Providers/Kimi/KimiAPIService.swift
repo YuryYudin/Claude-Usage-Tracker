@@ -33,7 +33,8 @@ final class KimiAPIService {
         request.cachePolicy = .reloadIgnoringLocalCacheData
         request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.setValue("Claude-Usage-Tracker/3.3.0", forHTTPHeaderField: "User-Agent")
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown"
+        request.setValue("Claude-Usage-Tracker/\(version)", forHTTPHeaderField: "User-Agent")
         let data: Data
         let response: HTTPURLResponse
         do { (data, response) = try await transport(request) }

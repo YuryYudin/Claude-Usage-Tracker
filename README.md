@@ -1,36 +1,44 @@
-<div align="center">
-  <a href="mailto:hamedelfayome@gmail.com?subject=Claude%20Usage%20Tracker%20%E2%80%94%20Sponsorship"><img src="https://claudetracker.com/asset/sponsor.svg" alt="Sponsor slot available — get in touch: hamedelfayome@gmail.com" height="44"></a>
-</div>
+# Claude Usage Tracker - YuryYudin fork
 
-<br>
+A macOS menu bar app for Claude, OpenAI Codex, Z.ai GLM and Kimi Code.
 
-<div align="center">
-  <a href="https://claudetracker.com/#fleet"><img src="https://claudetracker.com/map.svg" alt="Claude Usage Tracker — a native macOS menu bar app for real-time monitoring of Claude AI usage limits. Live worldwide distribution map." width="100%"></a>
+[Download the latest fork release](https://github.com/YuryYudin/Claude-Usage-Tracker/releases/latest)
+| [Changelog](CHANGELOG.md)
+| [Upstream project](https://github.com/hamed-elfayome/Claude-Usage-Tracker)
 
-  <a href="https://claudetracker.com"><img src="https://claudetracker.com/asset/languages.svg?list=English%2CEspa%C3%B1ol%2CFran%C3%A7ais%2CDeutsch%2CItaliano%2CPortugu%C3%AAs%2CPortugu%C3%AAs%20(BR)%2C%E6%97%A5%E6%9C%AC%E8%AA%9E%2C%ED%95%9C%EA%B5%AD%EC%96%B4%2C%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%2C%E7%B9%81%E9%AB%94%E4%B8%AD%E6%96%87%2CT%C3%BCrk%C3%A7e%2C%D0%A3%D0%BA%D1%80%D0%B0%D1%97%D0%BD%D1%81%D1%8C%D0%BA%D0%B0%2CTi%E1%BA%BFng%20Vi%E1%BB%87t" alt="Localized in 14 languages" width="100%"></a>
+## What this fork adds
 
-  <br>
+Based on upstream v3.3.0, this fork includes:
 
-  <a href="https://github.com/hamed-elfayome/Claude-Usage-Tracker/releases/latest/download/Claude-Usage.zip"><img src="https://claudetracker.com/asset/download.svg" alt="Download for macOS — latest release, ~6 MB, signed &amp; notarized" height="78"></a>
+- **Codex through the local CLI or SSH**, with per-account executables, homes and quota selection. Upstream's HTTP connection is also available.
+- **Z.ai GLM Coding Plan** quota monitoring.
+- **Kimi Code subscriptions**, including Kimi.ai/Kimi.com region selection, OpenCode credential import, five-hour and available weekly/monthly quota windows.
+- **Desktop widgets for up to eight accounts** in Large and Extra Large, with readable content when the desktop loses focus.
+- **Guarded account migration and credential persistence**, preserving account IDs, settings, history and provider-specific connections.
 
-  <br>
+## Privacy changes
 
-  <a href="https://www.buymeacoffee.com/hamedelfayome"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="54"></a>
+This fork **removes upstream's automatic daily analytics heartbeat**, which
+reported the app version to the developer's server and supported installation
+and geographic statistics. It does not send that automatic tracking request.
 
-  <img src="https://claudetracker.com/asset/specs.svg?items=macOS%2014.0%2B%20(Sonoma)%2C~6%20MB%2CNative%20Swift%20%2F%20SwiftUI%2COfficially%20Signed" alt="macOS 14.0+ (Sonoma) · ~6 MB · Native Swift/SwiftUI · Officially Signed" height="40" align="middle"> 
-  <a href="https://claudetracker.com"><img src="https://claudetracker.com/asset/website.svg" alt="claudetracker.com — live stats &amp; install" height="30" hspace="4" align="middle"></a>
+Optional feedback and mobile-app interest buttons still send requests when you
+submit them. Feedback includes the name, role, email and message you enter.
+Normal provider API requests and GitHub contributor/avatar requests remain.
+Usage history stays local. See [SECURITY.md](SECURITY.md) for details.
 
-</div>
+Fork releases are independent of upstream. Automatic updates from upstream are
+disabled to protect the additional providers and migrated configuration.
 
 ---
 
 ## Overview
 
-Claude Usage Tracker is a lightweight, native macOS menu bar application that provides real-time monitoring of your Claude AI usage limits. Built entirely with Swift and SwiftUI, it offers a clean, intuitive interface to track your 5-hour session window, weekly usage limits, and Opus-specific consumption.
+Claude Usage Tracker is a native macOS menu bar application for monitoring Claude, Codex, Z.ai GLM and Kimi Code accounts. It displays the quota windows reported by each provider, keeps local usage history and publishes desktop widgets. Claude accounts also support model-specific usage and API billing views.
 
 ### Key Capabilities
 
-- **Multi-Provider Support**: Track OpenAI Codex usage alongside Claude — per-profile provider selection, built on a registry so more providers can follow
+- **Multi-Provider Support**: Track Claude, OpenAI Codex, Z.ai GLM and Kimi Code with separate credentials and quota windows for each account
 - **Dynamic Island (Beta)**: A minimal notch HUD showing what Claude Code is doing in real time — current tool, session status, and a pulse when Claude needs your input
 - **Multi-Profile Support**: Manage unlimited Claude accounts with isolated credentials and settings
 - **Terminal Launchers**: Install a `claude-<profile>` command per profile — each opens Claude Code with that profile's own login while plain `claude` follows the active profile
@@ -62,6 +70,10 @@ Claude Usage Tracker is a lightweight, native macOS menu bar application that pr
 
 ## What's New
 
+- **v3.4.0 (2026-11-02, fork release)**: Kimi Code and Z.ai GLM, local/SSH Codex connections, eight-account desktop widgets, safer migration and refresh handling, and removal of the automatic upstream analytics heartbeat.
+
+### Earlier upstream releases
+
 - **v3.3.0 (2026-08-29)**: **Multi-provider architecture with OpenAI Codex support** (#229) — per-profile provider selection on a registry pattern (`docs/ADDING_A_PROVIDER.md`); **per-profile terminal launchers** — `claude-<profile>` commands with isolated `CLAUDE_CONFIG_DIR` logins and automatic usage tracking after one `/login`; keychain migration finally works on shipped Developer ID builds (#292); popover shows over full-screen apps (#298); Dynamic Island targets the built-in notch (#294); Cloudflare challenges no longer masquerade as expired credentials (#277); macOS 26 multi-profile crash fixes; transient E1000 on profile switch eliminated; obsolete peak-hours indicator removed (#308); Vietnamese localization — 14 languages total. Thanks to 8 community contributors.
 
 - **v3.2.0 (2026-07-12)**: **Dynamic Island (Beta)** — live Claude Code activity HUD at the notch; **Fable per-model tracking** via the new `limits[]` usage format; credentials moved to the macOS Keychain (GHSA-mfxh-xpwm-23c7); profile switching overhaul (no more forced re-logins); usage history storage fix (silent settings loss on macOS 26); macOS 26/27 crash and sign-in fixes; localization parity across all 13 languages. Huge thanks to 9 community contributors.
@@ -91,7 +103,7 @@ Claude Usage Tracker is a lightweight, native macOS menu bar application that pr
 Before installing Claude Usage Tracker, ensure you have:
 
 - **macOS 14.0 (Sonoma) or later** - Check: Apple menu → About This Mac
-- **Active Claude AI account** - Sign up at [claude.ai](https://claude.ai)
+- **An account with a supported provider**: Claude, OpenAI Codex, Z.ai GLM or Kimi Code
 
 **Authentication** (choose one method):
 - **Easiest**: [Claude Code](https://claude.com/claude-code) installed and logged in - App automatically uses CLI credentials (v2.2.2+)
@@ -102,74 +114,36 @@ Before installing Claude Usage Tracker, ensure you have:
 
 ### Installation
 
-#### Option 1: Homebrew (Recommended)
+Download **Claude-Usage-3.4.0.dmg** or **Claude-Usage.zip** from
+[our releases](https://github.com/YuryYudin/Claude-Usage-Tracker/releases/latest).
+Both contain the same universal app for Apple Silicon and Intel Macs.
+
+1. Quit the existing app. For an upgrade, privately back up its preferences and history and keep the previous app as a ZIP.
+2. Open the DMG, or extract the ZIP, and copy `Claude Usage.app` to `/Applications`.
+3. Launch the installed copy and eject the DMG. Run one copy against your account store.
+
+This fork release is **ad-hoc signed and not Apple-notarized**. If macOS blocks
+it, use the per-app Open Anyway option in System Settings > Privacy & Security.
+The archive includes upgrade notes; [detailed backup instructions](docs/reviews/local-upgrade-notes.txt)
+are also available in this repository.
+
+Download `SHA256SUMS` alongside both release files and verify them with
+`shasum -a 256 -c SHA256SUMS`.
+
+Upstream Homebrew/Nix packages install the upstream app. They do not include
+this fork's additional providers or privacy changes. Update this fork manually
+from its GitHub releases; its in-app upstream updater is disabled.
+
+#### Build from source
 
 ```bash
-brew install --cask hamed-elfayome/claude-usage/claude-usage-tracker
-```
-
-Or tap first, then install:
-
-```bash
-brew tap hamed-elfayome/claude-usage
-brew install --cask claude-usage-tracker
-```
-
-**Note**: Starting with v2.0.0, the app is officially signed with an Apple Developer certificate. No security workarounds needed!
-
-**To update**:
-```bash
-brew upgrade --cask claude-usage-tracker
-```
-
-Or use the built-in automatic update feature (Settings → Updates).
-
-**To uninstall**:
-```bash
-brew uninstall --cask claude-usage-tracker
-```
-
-#### Option 2: Nix
-
-Test the app:
-
-```bash
-nix-shell -p claude-usage-tracker
-```
-
-Install it using home-manager:
-
-```nix
-home.packages = with pkgs; [
-  claude-usage-tracker
-];
-```
-
-#### Option 3: Direct Download
-
-**[Download Claude-Usage.zip](https://github.com/hamed-elfayome/Claude-Usage-Tracker/releases/latest/download/Claude-Usage.zip)**
-
-1. Download the `.zip` file from the link above
-2. Extract the zip file (double-click or use Archive Utility)
-3. Drag `Claude Usage.app` to your Applications folder
-4. Double-click to launch - that's it!
-
-**v2.0.0+ Note**: The app is now officially signed with an Apple Developer certificate. You can install and run it like any other Mac application - no security warnings or workarounds needed.
-
-**Automatic Updates**: Once installed, the app will automatically check for updates and notify you when new versions are available (Settings → Updates).
-
-#### Option 4: Build from Source
-
-```bash
-# Clone the repository
-git clone https://github.com/hamed-elfayome/Claude-Usage-Tracker.git
+git clone https://github.com/YuryYudin/Claude-Usage-Tracker.git
 cd Claude-Usage-Tracker
-
-# Open in Xcode
 open "Claude Usage.xcodeproj"
-
-# Build and run (⌘R)
 ```
+
+Build with the `Claude Usage` scheme. See [RELEASING.md](RELEASING.md) for
+universal builds and packaging.
 
 ### Quick Start Guide
 
@@ -375,10 +349,9 @@ Plain `claude` keeps following the **active** profile, exactly as before. Removi
 ## Features
 
 ### Installation & Updates
-- **Official Apple Code Signing**: Professionally signed application - installs like any Mac app
-- **Automatic Updates**: Built-in update system powered by Sparkle framework
-- **One-Click Installation**: No security workarounds or manual approvals needed
-- **Update Notifications**: Get notified when new versions are available
+- **Fork release packaging**: Universal app and widget with verified ad-hoc signatures; not Apple-notarized
+- **Manual Fork Updates**: Download verified packages from this repository's GitHub releases
+- **Installation**: Copy the app from the DMG or ZIP into Applications; macOS may require per-app approval
 
 ### Usage Tracking & Monitoring
 - Real-time monitoring of 5-hour session, weekly limits, and Opus-specific usage
@@ -423,19 +396,19 @@ Plain `claude` keeps following the **active** profile, exactly as before. Removi
 
 ### Security & Privacy
 - **macOS Keychain Storage**: All per-profile credentials (session keys, API keys, CLI OAuth tokens) stored in the macOS data-protection Keychain — never in cleartext on disk (GHSA-mfxh-xpwm-23c7)
-- **Automatic Migration**: Seamless, verified migration from old storage methods — no re-login required
-- **Apple Code Signed**: Verified by Apple for enhanced security and trust
+- **Guarded Migration**: Validates profile records and preserves a private preferences/history backup before compatibility saves
+- **Verified release artifacts**: App/widget signature verification and published SHA-256 checksums
 - **Advanced Error Handling**: Professional error system with user-friendly recovery
 - **Robust Validation**: Session key and API endpoint validation
 - Local storage with no cloud sync
 - No automatic usage analytics. Optional feedback and mobile-app interest requests require a user action.
-- HTTPS-only communication with Claude API
+- HTTPS provider requests and an authenticated local hook listener for optional Claude Code integration
 
 ### Advanced Capabilities
 - Multi-screen support
 - First-run guided setup wizard
 - Protocol-based modular architecture
-- Persistent settings with App Groups
+- Persistent settings and a private local widget snapshot
 - Comprehensive test coverage
 
 ---
@@ -545,11 +518,8 @@ Terminal integration (app-wide):
 - See [Claude Code Integration](#claude-code-integration) section for detailed setup
 
 #### Updates
-Automatic update configuration:
-- **Automatic Update Checking**: Configure how often to check for updates
-- **Update Notifications**: Get notified when new versions are available
-- **One-Click Installation**: Download and install updates with a single click
-- **Release Notes**: View what's new in each update
+Automatic upstream updates are disabled in this fork. Download updates from
+[our GitHub releases](https://github.com/YuryYudin/Claude-Usage-Tracker/releases/latest).
 
 #### About
 Application information:
@@ -769,11 +739,11 @@ The app can simultaneously monitor both web (claude.ai) and API console usage, p
 
 ## Security
 
-- **macOS Keychain**: Session keys stored securely in macOS Keychain (most secure storage available)
-- **Automatic Migration**: v2.0+ automatically migrates session keys from older storage methods to Keychain
-- **Apple Code Signed**: Officially signed with Apple Developer certificate for verified authenticity
-- **Secure Updates**: Automatic updates delivered over HTTPS with code signature verification
-- **No Cloud Sync**: All data remains local to your machine
+- **Credential Storage**: Uses per-profile Keychain storage when available. Ad-hoc builds retain an inline fallback when verified Keychain writes are unavailable, so keep preferences and backups private.
+- **Verified Migration**: Credentials are removed from preferences only after a successful Keychain read-back
+- **Fork signing**: Ad-hoc signatures seal the distributed app and embedded widget; this release is not Apple-notarized
+- **Manual Fork Updates**: Download from this fork's GitHub releases; automatic upstream updates are disabled
+- **No Cloud Sync**: Usage history and profile settings are stored locally
 - **No Automatic Usage Analytics**: The upstream daily heartbeat is removed in this fork. Optional feedback sends the name, role, email and message you enter; the mobile-app interest button sends an interest request to the developer's Cloudflare Worker.
 - **Advanced Error Handling**: Robust error system with user-friendly recovery
 - **Session Key Validation**: Comprehensive validation of API credentials
@@ -818,33 +788,17 @@ Session keys may expire after a period of time. You'll receive a notification 24
 2. Click "Sign in to Claude.ai" (or "Sign in to Anthropic Console") to re-authenticate via the built-in browser
 3. Or expand "Advanced: Manual Session Key" to paste a new key manually
 
-### Updates Not Working
+### Updating this fork
 
-If automatic updates aren't working:
+Download the latest release from
+[YuryYudin/Claude-Usage-Tracker](https://github.com/YuryYudin/Claude-Usage-Tracker/releases/latest).
+Automatic upstream updates are intentionally disabled for compatibility.
 
-1. Check Settings → Updates to ensure automatic checking is enabled
-2. Verify you're running v2.0.0 or later (earlier versions don't have auto-update)
-3. Check your internet connection
-4. Manually download the latest version from GitHub if needed
+## Credits
 
-## Contributors
-
-<img src="https://contrib.rocks/image?repo=hamed-elfayome/Claude-Usage-Tracker" alt="Contributors" height="30px" />
-
-This project is built for the community — everyone is welcome
-
-### Special Thanks
-
-A huge thank you to everyone who contributed code, translations, bug reports, and pull requests. Your effort makes this project possible:
-
-<a href="https://github.com/novastate"><img src="https://github.com/novastate.png" width="40" height="40" alt="novastate" title="novastate"></a>
-<a href="https://github.com/heathdutton"><img src="https://github.com/heathdutton.png" width="40" height="40" alt="heathdutton" title="heathdutton"></a>
-<a href="https://github.com/tsvikas"><img src="https://github.com/tsvikas.png" width="40" height="40" alt="tsvikas" title="tsvikas"></a>
-<a href="https://github.com/kynoptic"><img src="https://github.com/kynoptic.png" width="40" height="40" alt="kynoptic" title="kynoptic"></a>
-<a href="https://github.com/bezlant"><img src="https://github.com/bezlant.png" width="40" height="40" alt="bezlant" title="bezlant"></a>
-<a href="https://github.com/trickart"><img src="https://github.com/trickart.png" width="40" height="40" alt="trickart" title="trickart"></a>
-<a href="https://github.com/Ali-Aldahmani"><img src="https://github.com/Ali-Aldahmani.png" width="40" height="40" alt="Ali-Aldahmani" title="Ali-Aldahmani"></a>
-<a href="https://github.com/cuvitx"><img src="https://github.com/cuvitx.png" width="40" height="40" alt="cuvitx" title="cuvitx"></a>
+This fork builds on [Hamed Elfayome's Claude Usage Tracker](https://github.com/hamed-elfayome/Claude-Usage-Tracker)
+and the work of its contributors. Original attribution and the MIT license are
+preserved. Thanks to everyone who contributed code, translations and bug reports.
 
 ## Contributing
 

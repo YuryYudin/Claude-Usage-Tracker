@@ -5,6 +5,36 @@ All notable changes to Claude Usage Tracker will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.0] - 2026-11-02
+
+First release of the YuryYudin fork, based on upstream v3.3.0.
+
+### Added
+
+- Kimi Code subscriptions with global/China endpoints, OpenCode credential import, and five-hour, optional weekly and monthly quota windows.
+- Z.ai GLM Coding Plan monitoring and token/credit quota compatibility.
+- Local and SSH Codex app-server connections, custom executables/homes and named quota selection.
+- Large and Extra Large desktop widgets for up to eight displayed accounts.
+- Guarded profile migration, credential write-back and refresh ownership checks.
+
+### Fixed
+
+- Widget readability when the desktop loses focus, including tinted rendering.
+- Monthly Kimi widget labels and shared snapshot validation.
+- Matching app/widget versions and compatibility with the installed Xcode 16 toolchain.
+
+### Privacy
+
+- Removed upstream's automatic daily analytics heartbeat.
+- Removed upstream geographic/sponsor/donation README banners and the fork's inherited sponsorship link.
+- Documented remaining user-triggered feedback/mobile interest requests accurately.
+
+### Distribution
+
+- Universal macOS 14+ app, version 3.4.0/build 25, distributed as DMG and ZIP with checksums.
+- Ad-hoc signed; not Developer ID signed or Apple-notarized.
+- Automatic upstream updates remain disabled; use this fork's GitHub releases.
+
 ## [3.3.0] - 2026-08-29
 
 ### Major Features

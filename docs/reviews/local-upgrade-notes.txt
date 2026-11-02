@@ -1,8 +1,8 @@
-Claude Usage integration build - 2026-11-02
+Claude Usage Tracker - YuryYudin fork v3.4.0 (2026-11-02)
 
 Includes upstream provider integration, retained Codex local/SSH support, GLM/z.ai,
-and large/extra-large overview widgets for up to eight accounts. Source: a15cf50.
-Version 3.3.0, build 24. Automatic upstream updates remain disabled.
+and large/extra-large overview widgets for up to eight accounts. See the v3.4.0 tag for the release source.
+Version 3.4.0, build 25. Automatic upstream updates remain disabled.
 Removes the automatic daily analytics heartbeat. Optional feedback and mobile-app
 interest requests remain user-triggered.
 Retains the user-accepted build-20 desktop focus/appearance fix. Adds direct
@@ -10,7 +10,7 @@ Kimi Code subscriptions with region selection, OpenCode import, and manual keys.
 Quota windows include 5-hour, weekly when available, monthly total and monthly
 code share. Code share is part of the monthly total, not an additional budget.
 
-THIS DMG IS A LOCAL BUILD
+FORK DISTRIBUTION AND SIGNING
 
 The app and embedded code are ad-hoc signed, not Developer ID signed or notarized.
 The signature seals the bundle; it does not grant the old app's Keychain identity.
@@ -71,7 +71,7 @@ Quit Claude Usage first. Run these in Terminal before copying the new app into
 Applications. They create a private backup, without printing credential values:
 
 umask 077
-backup_dir="$HOME/Library/Application Support/Claude Usage Recovery/$(date +%Y%m%d-%H%M%S)-build24.noindex"
+backup_dir="$HOME/Library/Application Support/Claude Usage Recovery/$(date +%Y%m%d-%H%M%S)-v3.4.0.noindex"
 mkdir -p -m 700 "$backup_dir"
 ditto -c -k --sequesterRsrc --keepParent "/Applications/Claude Usage.app" "$backup_dir/Claude Usage.app.zip"
 defaults export HamedElfayome.Claude-Usage "$backup_dir/preferences.plist"
