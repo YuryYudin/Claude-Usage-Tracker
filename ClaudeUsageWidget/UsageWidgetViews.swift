@@ -3,42 +3,30 @@ import WidgetKit
 
 // MARK: - Palette
 
-/// Every color the widget draws, for the two states a macOS desktop widget is
-/// displayed in: full color while the desktop is frontmost, and greyed out
-/// while any other app is.
-///
-/// Measured against a swatch grid rendered by the real widget host, the greyed
-/// state works out to `pixel = plate × luminance(color)`, and it has three
-/// consequences the layout has to be built around:
-///
-/// - `widgetRenderingMode` stays `.fullColor` in both states, so there is no
-///   environment value to branch on — one set of colors has to serve both.
-/// - The alpha channel is ignored (`white.opacity(0.5)` measured a factor of
-///   1.01, `black.opacity(0.5)` measured 0.23 — identical to solid black), so
-///   hierarchy has to come from opaque grey levels, never from `.opacity`, and
-///   hierarchical styles like `.secondary` are unusable.
-/// - `containerBackground` is exempt from the multiply: the host replaces it
-///   with its own light plate. A background drawn as *content* is not exempt,
-///   which is what keeps the dark card dark when greyed — and with the card
-///   dark, near-white text maps to the light plate value and stays readable.
-///   That is why `body` paints the card in a `ZStack` and the widget disables
-///   its content margins.
+/// Full-color widgets retain the contrast palette used by older desktop hosts.
+/// In accented/vibrant modes the host recolors foreground shapes, including an
+/// opaque content background. Keep that background out of the foreground and
+/// use alpha for hierarchy so it cannot flatten the whole widget to one plate.
 private struct Palette {
     let colorScheme: ColorScheme
+    let renderingMode: WidgetRenderingMode
+
+    var isFullColor: Bool { renderingMode == .fullColor }
 
     private var isDark: Bool { colorScheme == .dark }
 
     var card: Color { isDark ? Color(white: 0.16) : Color(white: 0.97) }
-    var primary: Color { isDark ? Color(white: 0.95) : Color(white: 0.12) }
-    var secondary: Color { isDark ? Color(white: 0.72) : Color(white: 0.36) }
-    var tertiary: Color { isDark ? Color(white: 0.58) : Color(white: 0.50) }
-    var barTrack: Color { isDark ? Color(white: 0.34) : Color(white: 0.82) }
-    var separator: Color { isDark ? Color(white: 0.30) : Color(white: 0.80) }
+    var primary: Color { isFullColor ? (isDark ? Color(white: 0.95) : Color(white: 0.12)) : Color.primary.opacity(1) }
+    var secondary: Color { isFullColor ? (isDark ? Color(white: 0.72) : Color(white: 0.36)) : Color.primary.opacity(0.72) }
+    var tertiary: Color { isFullColor ? (isDark ? Color(white: 0.58) : Color(white: 0.50)) : Color.primary.opacity(0.58) }
+    var barTrack: Color { isFullColor ? (isDark ? Color(white: 0.34) : Color(white: 0.82)) : Color.primary.opacity(0.22) }
+    var separator: Color { isFullColor ? (isDark ? Color(white: 0.30) : Color(white: 0.80)) : Color.primary.opacity(0.20) }
 
     /// Severity hues, picked so that every one of them still contrasts with
     /// the card after the host flattens it to grey — in Dark Mode that means
     /// no deep red, which would land darker than the card it sits on.
     func usage(_ percentage: Double) -> Color {
+        guard isFullColor else { return .primary }
         switch percentage {
         case ..<75:
             return isDark
@@ -59,7 +47,7 @@ private struct Palette {
 // MARK: - Shared helpers
 
 /// Widget content is inset by hand because the families disable their content
-/// margins — the card has to reach the widget's edges to survive greying.
+/// margins. The full-color card must reach the widget's edges.
 private let widgetContentPadding: CGFloat = 14
 
 private func providerIcon(_ provider: WidgetSnapshot.ProfileEntry.Provider) -> String {
@@ -85,6 +73,7 @@ private struct UsageBarTrack: View {
                 Capsule().fill(track)
                 Capsule()
                     .fill(fill)
+                    .widgetAccentable()
                     .frame(width: proxy.size.width * CGFloat(min(max(percentage, 0), 100) / 100))
             }
         }
@@ -107,6 +96,7 @@ private struct UsageRing: View {
                     style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
+                .widgetAccentable()
             Text("\(Int(percentage))%")
                 .font(.callout.monospacedDigit().bold())
                 .foregroundStyle(palette.primary)
@@ -136,6 +126,7 @@ private struct UsageBar: View {
                 Text("\(Int(percentage))%")
                     .font((compact ? Font.caption2 : .caption).monospacedDigit().bold())
                     .foregroundStyle(palette.usage(percentage))
+                    .widgetAccentable()
             }
             UsageBarTrack(
                 percentage: percentage,
@@ -187,12 +178,13 @@ private struct NoDataView: View {
     }
 }
 
-/// Staleness lightens the ink instead of using `.opacity`: the greying pass
-/// ignores alpha, so a dimmed row would look identical to a fresh one there.
+/// Older full-color hosts use opaque ink levels; tinted hosts preserve alpha.
 private extension View {
     @ViewBuilder
-    func staleDimmed(_ isStale: Bool, isDark: Bool) -> some View {
-        if isStale {
+    func staleDimmed(_ isStale: Bool, isDark: Bool, renderingMode: WidgetRenderingMode) -> some View {
+        if isStale && renderingMode != .fullColor {
+            opacity(0.65)
+        } else if isStale {
             saturation(0.3).brightness(isDark ? -0.22 : 0.22)
         } else {
             self
@@ -204,6 +196,7 @@ private extension View {
 
 struct SessionUsageWidgetView: View {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.widgetRenderingMode) private var renderingMode
     let entry: UsageEntry
 
     private var profile: WidgetSnapshot.ProfileEntry? {
@@ -214,11 +207,11 @@ struct SessionUsageWidgetView: View {
     }
 
     var body: some View {
-        let palette = Palette(colorScheme: colorScheme)
+        let palette = Palette(colorScheme: colorScheme, renderingMode: renderingMode)
         ZStack {
-            // Painted as content, not as the container background, so the
-            // greyed-out state keeps the card dark instead of flattening it.
-            palette.card
+            if palette.isFullColor {
+                palette.card
+            }
             Group {
                 if let profile {
                     VStack(alignment: .leading, spacing: 6) {
@@ -250,13 +243,14 @@ struct SessionUsageWidgetView: View {
                                 .frame(maxWidth: .infinity, alignment: .center)
                         }
                     }
-                    .staleDimmed(entry.isProfileStale(profile), isDark: colorScheme == .dark)
+                    .staleDimmed(entry.isProfileStale(profile), isDark: colorScheme == .dark, renderingMode: renderingMode)
                 } else {
                     NoDataView(palette: palette)
                 }
             }
             .padding(widgetContentPadding)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .containerBackground(palette.card, for: .widget)
     }
 }
@@ -278,6 +272,7 @@ struct SessionUsageWidget: Widget {
 struct UsageOverviewWidgetView: View {
     @Environment(\.widgetFamily) private var family
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.widgetRenderingMode) private var renderingMode
     let entry: UsageEntry
 
     private var profiles: [WidgetSnapshot.ProfileEntry] {
@@ -286,9 +281,11 @@ struct UsageOverviewWidgetView: View {
     }
 
     var body: some View {
-        let palette = Palette(colorScheme: colorScheme)
+        let palette = Palette(colorScheme: colorScheme, renderingMode: renderingMode)
         ZStack {
-            palette.card
+            if palette.isFullColor {
+                palette.card
+            }
             Group {
                 if profiles.isEmpty {
                     NoDataView(palette: palette)
@@ -304,6 +301,7 @@ struct UsageOverviewWidgetView: View {
             }
             .padding(widgetContentPadding)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .containerBackground(palette.card, for: .widget)
     }
 
@@ -388,7 +386,7 @@ struct UsageOverviewWidgetView: View {
                 }
             }
         }
-        .staleDimmed(entry.isProfileStale(profile), isDark: colorScheme == .dark)
+        .staleDimmed(entry.isProfileStale(profile), isDark: colorScheme == .dark, renderingMode: renderingMode)
     }
 
     /// Medium and dense large: one compact line per profile, name in a fixed column so the
@@ -425,7 +423,7 @@ struct UsageOverviewWidgetView: View {
                     }
                 }
                 .frame(maxHeight: .infinity)
-                .staleDimmed(entry.isProfileStale(profile), isDark: colorScheme == .dark)
+                .staleDimmed(entry.isProfileStale(profile), isDark: colorScheme == .dark, renderingMode: renderingMode)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

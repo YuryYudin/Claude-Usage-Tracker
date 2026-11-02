@@ -27,6 +27,11 @@ def main():
     root = Path(__file__).resolve().parent.parent
     if not (app / "Contents/Info.plist").is_file():
         parser.error("app must be a built macOS app bundle")
+    app_info = plistlib.loads((app / "Contents/Info.plist").read_bytes())
+    widget_info = plistlib.loads((app / "Contents/PlugIns/Claude UsageWidget.appex/Contents/Info.plist").read_bytes())
+    for key in ("CFBundleShortVersionString", "CFBundleVersion"):
+        if not app_info.get(key) or widget_info.get(key) != app_info[key]:
+            parser.error(f"app and widget must have matching {key}; rebuild both targets")
     if output.suffix != ".dmg":
         parser.error("output must end in .dmg")
     if output.exists() or output.with_suffix(".dmg.sha256").exists():
