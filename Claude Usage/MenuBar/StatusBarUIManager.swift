@@ -368,8 +368,14 @@ final class StatusBarUIManager {
             let usage = profile.claudeUsage?.trayUsage ?? ClaudeUsage.empty
             let showRemaining = config.showRemainingPercentage
 
+            // Plans without a 5-hour window (e.g. Ultra) draw weekly in the
+            // session (primary) slot and drop the secondary week value, so
+            // weekly isn't drawn twice. The session* values below then hold weekly.
+            let hasSessionLimit = usage.hasSessionLimit
+            let showWeek = config.showWeek && hasSessionLimit
+
             // Calculate percentages
-            let sessionUsed = usage.effectiveSessionPercentage
+            let sessionUsed = hasSessionLimit ? usage.effectiveSessionPercentage : usage.weeklyPercentage
             let weekUsed = usage.weeklyPercentage
 
             let sessionDisplay = UsageStatusCalculator.getDisplayPercentage(
@@ -381,7 +387,7 @@ final class StatusBarUIManager {
                 showRemaining: showRemaining
             )
 
-            let sessionElapsed = usage.primaryElapsedFraction()
+            let sessionElapsed = hasSessionLimit ? usage.primaryElapsedFraction() : usage.weeklyElapsedFraction()
             let weekElapsed = usage.weeklyElapsedFraction()
             let sessionStatus = UsageStatusCalculator.calculateStatus(
                 usedPercentage: sessionUsed,
@@ -423,7 +429,7 @@ final class StatusBarUIManager {
                 if config.showProfileLabel {
                     image = renderer.createConcentricIconWithLabel(
                         sessionPercentage: sessionDisplay,
-                        weekPercentage: config.showWeek ? weekDisplay : 0,
+                        weekPercentage: showWeek ? weekDisplay : 0,
                         sessionStatus: sessionStatus,
                         weekStatus: weekStatus,
                         profileName: profile.name,
@@ -431,15 +437,15 @@ final class StatusBarUIManager {
                         isDarkMode: menuBarIsDark,
                         useSystemColor: false,
                         sessionTimeMarker: sessionMarker,
-                        weekTimeMarker: config.showWeek ? weekMarker : nil,
+                        weekTimeMarker: showWeek ? weekMarker : nil,
                         sessionPaceStatus: sessionPaceStatus,
-                        weekPaceStatus: config.showWeek ? weekPaceStatus : nil,
+                        weekPaceStatus: showWeek ? weekPaceStatus : nil,
                         showPaceMarker: config.showPaceMarker
                     )
                 } else {
                     image = renderer.createConcentricIcon(
                         sessionPercentage: sessionDisplay,
-                        weekPercentage: config.showWeek ? weekDisplay : 0,
+                        weekPercentage: showWeek ? weekDisplay : 0,
                         sessionStatus: sessionStatus,
                         weekStatus: weekStatus,
                         profileInitial: String(profile.name.prefix(1)),
@@ -447,16 +453,16 @@ final class StatusBarUIManager {
                         isDarkMode: menuBarIsDark,
                         useSystemColor: false,
                         sessionTimeMarker: sessionMarker,
-                        weekTimeMarker: config.showWeek ? weekMarker : nil,
+                        weekTimeMarker: showWeek ? weekMarker : nil,
                         sessionPaceStatus: sessionPaceStatus,
-                        weekPaceStatus: config.showWeek ? weekPaceStatus : nil,
+                        weekPaceStatus: showWeek ? weekPaceStatus : nil,
                         showPaceMarker: config.showPaceMarker
                     )
                 }
             case .progressBar:
                 image = renderer.createMultiProfileProgressBar(
                     sessionPercentage: sessionDisplay,
-                    weekPercentage: config.showWeek ? weekDisplay : nil,
+                    weekPercentage: showWeek ? weekDisplay : nil,
                     sessionStatus: sessionStatus,
                     weekStatus: weekStatus,
                     profileName: config.showProfileLabel ? profile.name : nil,
@@ -464,9 +470,9 @@ final class StatusBarUIManager {
                     isDarkMode: menuBarIsDark,
                     useSystemColor: false,
                     sessionTimeMarker: sessionMarker,
-                    weekTimeMarker: config.showWeek ? weekMarker : nil,
+                    weekTimeMarker: showWeek ? weekMarker : nil,
                     sessionPaceStatus: sessionPaceStatus,
-                    weekPaceStatus: config.showWeek ? weekPaceStatus : nil,
+                    weekPaceStatus: showWeek ? weekPaceStatus : nil,
                     showPaceMarker: config.showPaceMarker
                 )
             case .compact:
@@ -483,7 +489,7 @@ final class StatusBarUIManager {
             case .percentage:
                 image = renderer.createMultiProfilePercentage(
                     sessionPercentage: sessionDisplay,
-                    weekPercentage: config.showWeek ? weekDisplay : nil,
+                    weekPercentage: showWeek ? weekDisplay : nil,
                     sessionStatus: sessionStatus,
                     weekStatus: weekStatus,
                     profileName: config.showProfileLabel ? profile.name : nil,
@@ -491,7 +497,7 @@ final class StatusBarUIManager {
                     isDarkMode: menuBarIsDark,
                     useSystemColor: false,
                     sessionPaceStatus: sessionPaceStatus,
-                    weekPaceStatus: config.showWeek ? weekPaceStatus : nil,
+                    weekPaceStatus: showWeek ? weekPaceStatus : nil,
                     showPaceMarker: config.showPaceMarker
                 )
             }
