@@ -1,8 +1,10 @@
-# Claude Usage Tracker - YuryYudin fork
+# Claude Usage Tracker
 
 A macOS menu bar app for Claude, OpenAI Codex, Z.ai GLM and Kimi Code.
 
-[Download the latest fork release](https://github.com/YuryYudin/Claude-Usage-Tracker/releases/latest)
+[![Download for macOS](.github/download-macos.svg)](https://github.com/YuryYudin/Claude-Usage-Tracker/releases/latest/download/Claude-Usage.zip)
+
+[Latest release](https://github.com/YuryYudin/Claude-Usage-Tracker/releases/latest)
 | [Changelog](CHANGELOG.md)
 | [Upstream project](https://github.com/hamed-elfayome/Claude-Usage-Tracker)
 
@@ -791,7 +793,7 @@ Session keys may expire after a period of time. You'll receive a notification 24
 ### Updating this fork
 
 Download the latest release from
-[YuryYudin/Claude-Usage-Tracker](https://github.com/YuryYudin/Claude-Usage-Tracker/releases/latest).
+[this fork's GitHub releases](https://github.com/YuryYudin/Claude-Usage-Tracker/releases/latest).
 Automatic upstream updates are intentionally disabled for compatibility.
 
 ## Credits
