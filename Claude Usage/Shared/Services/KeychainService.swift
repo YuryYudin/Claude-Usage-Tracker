@@ -174,6 +174,7 @@ class KeychainService {
         case cliCredentialsJSON = "cli-credentials"
         case codexCredentialsJSON = "codex-credentials"
         case zaiAPIKey = "zai-api-key"
+        case kimiAPIKey = "kimi-api-key"
     }
 
     /// Single service for all per-profile secrets; the account encodes profile + field.

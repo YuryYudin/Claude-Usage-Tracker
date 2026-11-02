@@ -28,6 +28,8 @@ struct ProfileAccountIdentity: Equatable {
             }
         case .zai:
             source = [profile.zaiAPIKey]
+        case .kimi:
+            source = [profile.kimiAPIKey, profile.kimiConfiguration.region.rawValue]
         case .unsupported(let raw):
             source = [raw]
         }

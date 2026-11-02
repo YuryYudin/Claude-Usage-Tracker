@@ -7,3 +7,7 @@
 "widget.overview.desc" = "Mức sử dụng hạn mức của các hồ sơ được hiển thị.";
 "widget.tools" = "Lượt gọi công cụ";
 "widget.quota" = "Quota";
+
+// Kimi Code - English fallback for new strings
+"widget.monthly" = "Monthly";
+"widget.monthly_code" = "Code share";

@@ -9,3 +9,7 @@
 
 "widget.tools" = "工具呼叫";
 "widget.quota" = "Quota";
+
+// Kimi Code - English fallback for new strings
+"widget.monthly" = "Monthly";
+"widget.monthly_code" = "Code share";

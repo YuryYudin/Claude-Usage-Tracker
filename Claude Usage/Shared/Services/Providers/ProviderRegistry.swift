@@ -64,6 +64,14 @@ enum ProviderRegistry {
                 overageChecks: false, credits: false), credentialSections: [.zaiAccount],
             primaryWindowLabelKey: "usage.window.session", secondaryWindowLabelKey: "usage.window.weekly"
         ),
+        .kimi: ProviderDescriptor(
+            id: .kimi, displayName: "Kimi Code", logoAssetName: "",
+            logoSystemSymbolFallback: "moon.fill", statusPageURL: nil,
+            capabilities: ProviderCapabilities(tokenCounts: false, perModelBreakdown: false,
+                consoleBilling: false, cliAccountSync: false, autoStartSession: false,
+                overageChecks: false, credits: false), credentialSections: [.kimiAccount],
+            primaryWindowLabelKey: "usage.window.session", secondaryWindowLabelKey: "kimi.quota.monthly"
+        ),
     ]
 
     static func descriptor(for provider: Provider) -> ProviderDescriptor {
@@ -89,6 +97,8 @@ enum ProviderRegistry {
             return CodexUsageProvider.shared
         case .zai:
             return ZAIUsageProvider.shared
+        case .kimi:
+            return KimiUsageProvider.shared
         case .unsupported:
             return UnsupportedUsageProvider()
         }

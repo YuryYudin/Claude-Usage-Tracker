@@ -169,6 +169,7 @@ def model_source(ref, fork, integration=False):
         if integration:
             for name in ("CodexSettings", "CodexUsage", "ZAISettings", "ZAIUsage"):
                 parts.append(source(ref, MODELS + name + ".swift"))
+            parts.append(source(ref, MODELS + "KimiSettings.swift").split("/// A fetched snapshot")[0])
     for name in ("MenuBarIconConfig", "NotificationSettings", "Profile"):
         parts.append(source(ref, MODELS + name + ".swift"))
     return "\n".join(parts)

@@ -175,7 +175,7 @@ class ProfileStore {
             let fields: [(WritableKeyPath<Profile, String?>, KeychainService.ProfileSecretField)] = [
                 (\.claudeSessionKey, .claudeSessionKey), (\.apiSessionKey, .apiSessionKey),
                 (\.cliCredentialsJSON, .cliCredentialsJSON), (\.codexCredentialsJSON, .codexCredentialsJSON),
-                (\.zaiAPIKey, .zaiAPIKey)
+                (\.zaiAPIKey, .zaiAPIKey), (\.kimiAPIKey, .kimiAPIKey)
             ]
             var hadPlaintext = false
             for index in profiles.indices {
@@ -217,6 +217,7 @@ class ProfileStore {
         ok = try persistSecret(profile.cliCredentialsJSON, profile.id, .cliCredentialsJSON) && ok
         ok = try persistSecret(profile.codexCredentialsJSON, profile.id, .codexCredentialsJSON) && ok
         ok = try persistSecret(profile.zaiAPIKey, profile.id, .zaiAPIKey) && ok
+        ok = try persistSecret(profile.kimiAPIKey, profile.id, .kimiAPIKey) && ok
         return ok
     }
 
@@ -229,6 +230,7 @@ class ProfileStore {
         case .cliCredentialsJSON: old = previous?.cliCredentialsJSON
         case .codexCredentialsJSON: old = previous?.codexCredentialsJSON
         case .zaiAPIKey: old = previous?.zaiAPIKey
+        case .kimiAPIKey: old = previous?.kimiAPIKey
         }
 
         // A missing hydration may mean denied Keychain access. It must never

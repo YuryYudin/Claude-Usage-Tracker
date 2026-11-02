@@ -13,6 +13,7 @@ struct UsageQuota: Codable, Equatable, Identifiable {
     var consumed: Double?
     var allowance: Double?
     var unit: String?
+    var widgetLabelKey: String? = nil
 
     var effectivePercentage: Double { effectivePercentage(at: Date()) }
 

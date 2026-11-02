@@ -55,6 +55,7 @@ private func providerIcon(_ provider: WidgetSnapshot.ProfileEntry.Provider) -> S
     case .claude: return "sparkle"
     case .codex: return "chevron.left.forwardslash.chevron.right"
     case .zai: return "z.square.fill"
+    case .kimi: return "moon.fill"
     }
 }
 

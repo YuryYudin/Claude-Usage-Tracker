@@ -15,15 +15,17 @@ enum Provider: Codable, Hashable, CaseIterable {
     case anthropic
     case codex
     case zai
+    case kimi
     case unsupported(String)
 
-    static let allCases: [Provider] = [.anthropic, .codex, .zai]
+    static let allCases: [Provider] = [.anthropic, .codex, .zai, .kimi]
 
     init?(rawValue: String) {
         switch rawValue {
         case "anthropic", "claude": self = .anthropic
         case "codex": self = .codex
         case "zai": self = .zai
+        case "kimi": self = .kimi
         default: self = .unsupported(rawValue)
         }
     }
@@ -33,6 +35,7 @@ enum Provider: Codable, Hashable, CaseIterable {
         case .anthropic: return "anthropic"
         case .codex: return "codex"
         case .zai: return "zai"
+        case .kimi: return "kimi"
         case .unsupported(let value): return value
         }
     }

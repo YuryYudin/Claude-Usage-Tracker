@@ -342,7 +342,21 @@ Profiles aren't Claude-only anymore. When creating a profile, pick **OpenAI Code
 - Refreshes expired tokens automatically and writes them back atomically with `0600` permissions
 - Anthropic-only integrations (statusline, auto-start, Dynamic Island) hide themselves for Codex profiles
 
-Want another provider? The architecture is additive — see `docs/ADDING_A_PROVIDER.md`.
+## Kimi Code Profiles (local integration)
+
+Create a profile with **Kimi Code**, then open its connection settings. Choose
+Kimi.ai or Kimi.com to match your subscription, use **Import from OpenCode** or
+enter a Kimi Code subscription API key, and select **Test and Save**. The key is
+bound to this profile; switching logins in OpenCode does not switch the tracker.
+
+The tracker displays the quota windows returned by your plan: five-hour, weekly
+when available, monthly total and monthly code share. Code share is part of the
+monthly total. Missing quotas stay hidden. Select which quota drives the menu
+bar; large and extra-large widgets support up to eight displayed accounts and
+label monthly data explicitly. OpenCode Go and Moonshot's pay-as-you-go API are
+separate services.
+
+Want another provider? The architecture is additive - see `docs/ADDING_A_PROVIDER.md`.
 
 ---
 

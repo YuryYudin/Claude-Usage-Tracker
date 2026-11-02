@@ -1191,3 +1191,30 @@
 "settings.updates.integration_disabled" = "Updates are paused for this build to protect Codex connections and GLM accounts. A compatible update channel is required before updates can resume.";
 
 "usage.no_snapshot" = "No usage snapshot is available yet.";
+
+// Kimi Code - English fallback for new strings
+"kimi.title" = "Kimi Code";
+"kimi.subtitle" = "Track your Kimi Code subscription quota";
+"kimi.connection" = "Subscription connection";
+"kimi.region" = "Subscription region";
+"kimi.key" = "Kimi Code API key";
+"kimi.key.keep" = "Leave blank to keep the saved key";
+"kimi.import.options" = "OpenCode import options";
+"kimi.import.path" = "OpenCode executable path (optional)";
+"kimi.import" = "Import from OpenCode";
+"kimi.save" = "Test and Save";
+"kimi.saved" = "A Kimi Code key is saved for this account.";
+"kimi.remove" = "Remove saved key";
+"kimi.help" = "Import the active Kimi Code login for the selected region, or enter a subscription API key. Test and Save checks the connection before saving. Monthly code usage is a share of the monthly total. OpenCode Go and Moonshot platform keys use different subscriptions.";
+"kimi.console" = "Open Kimi Code Console";
+"kimi.quota.selection" = "Quota shown in the menu bar";
+"kimi.quota.session" = "5-hour window";
+"kimi.quota.weekly" = "Weekly";
+"kimi.quota.monthly" = "Monthly total";
+"kimi.quota.code_share" = "Monthly code share";
+"kimi.error.key" = "Kimi Code rejected this key. Check the key and subscription region.";
+"kimi.error.response" = "Kimi Code returned no usable quota data. The previous reading is retained.";
+"kimi.error.import" = "No active Kimi Code key was imported. Check the region and OpenCode executable, or enter the key manually.";
+"kimi.error.ambiguous" = "OpenCode returned multiple active Kimi accounts. Select one in OpenCode before importing.";
+"kimi.error.retry" = "Kimi Code refresh is waiting before retrying. The previous reading is retained.";
+"kimi.error.network" = "Kimi Code could not be reached. The previous reading is retained.";

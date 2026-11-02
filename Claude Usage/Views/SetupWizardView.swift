@@ -10,6 +10,7 @@ enum SetupMode {
     case manualSetup
     case codexSetup
     case zaiSetup
+    case kimiSetup
 }
 
 // MARK: - Wizard State Machine
@@ -64,6 +65,8 @@ struct SetupWizardView: View {
                         setupMode = .codexSetup
                     case .zai:
                         setupMode = .zaiSetup
+                    case .kimi:
+                        setupMode = .kimiSetup
                     case .unsupported:
                         break
                     }
@@ -91,6 +94,11 @@ struct SetupWizardView: View {
         case .manualSetup:
             manualSetupBody
 
+        case .kimiSetup:
+            KimiSetupView(onDone: {
+                NotificationCenter.default.post(name: .credentialsChanged, object: nil)
+                dismiss()
+            }, onBack: { setupMode = .chooseProvider })
         case .zaiSetup:
             ZAISetupView(onDone: {
                 NotificationCenter.default.post(name: .credentialsChanged, object: nil)
@@ -1067,7 +1075,7 @@ struct ProviderChoiceSetupView: View {
                     }
                 }
 
-                HStack(spacing: 16) {
+                LazyVGrid(columns: [GridItem(.fixed(228)), GridItem(.fixed(228))], spacing: 16) {
                     ForEach(Provider.allCases, id: \.self) { provider in
                         Button {
                             onSelect(provider)
@@ -1078,7 +1086,7 @@ struct ProviderChoiceSetupView: View {
                                     .font(.system(size: 14, weight: .semibold))
                                 Text(provider == .anthropic
                                      ? "setup.choose_provider.anthropic_hint".localized
-                                     : (provider == .zai ? "zai.settings.subtitle".localized : "setup.choose_provider.codex_hint".localized))
+                                     : (provider == .kimi ? "kimi.subtitle".localized : (provider == .zai ? "zai.settings.subtitle".localized : "setup.choose_provider.codex_hint".localized)))
                                     .font(.system(size: 11))
                                     .foregroundColor(.secondary)
                                     .multilineTextAlignment(.center)

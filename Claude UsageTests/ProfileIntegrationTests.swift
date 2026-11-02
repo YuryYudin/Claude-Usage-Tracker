@@ -13,6 +13,38 @@ final class ProfileIntegrationTests: XCTestCase {
         try run(defaults, store, secrets, directory)
     }
 
+    func testKimiKeyPersistsAndDeletesWithoutChangingOtherAccounts() throws {
+        try fixture { defaults, store, secrets, _ in
+            let old = Profile(name: "Existing", provider: .zai, zaiAPIKey: "existing-key")
+            let kimi = Profile(name: "Kimi", provider: .kimi, kimiAPIKey: "kimi-secret",
+                kimiConfiguration: .init(region: .china, selectedQuotaID: "limit_month_total"))
+            XCTAssertTrue(store.saveProfiles([old, kimi]))
+            var profiles = store.loadProfiles()
+            XCTAssertEqual(profiles, [old, kimi])
+            XCTAssertFalse(String(data: defaults.data(forKey: "profiles_v3")!, encoding: .utf8)!.contains("kimi-secret"))
+            XCTAssertEqual(secrets.loadProfileSecret(profileId: kimi.id, field: .kimiAPIKey), "kimi-secret")
+            profiles[1].kimiAPIKey = nil
+            XCTAssertTrue(store.saveProfiles(profiles))
+            XCTAssertNil(secrets.loadProfileSecret(profileId: kimi.id, field: .kimiAPIKey))
+            XCTAssertEqual(store.loadProfiles()[0], old)
+            XCTAssertNil(store.loadProfiles()[1].kimiAPIKey)
+        }
+    }
+
+    func testKimiAdHocFallbackRetainsKeyAndRejectsFailedDeletion() throws {
+        try fixture { defaults, _, _, directory in
+            let store = ProfileStore(defaults: defaults, secrets: UnavailableSecrets(), backupDirectory: directory)
+            let profile = Profile(name: "Kimi", provider: .kimi, kimiAPIKey: "kimi-secret")
+            XCTAssertTrue(store.saveProfiles([profile]))
+            var loaded = store.loadProfiles()
+            XCTAssertEqual(loaded.first?.kimiAPIKey, "kimi-secret")
+            let before = defaults.data(forKey: "profiles_v3")
+            loaded[0].kimiAPIKey = nil
+            XCTAssertFalse(store.saveProfiles(loaded))
+            XCTAssertEqual(defaults.data(forKey: "profiles_v3"), before)
+        }
+    }
+
     func testForkAccountsPreserveIDsTargetsSettingsAndSecrets() throws {
         try fixture { defaults, store, secrets, directory in
             var icon = MenuBarIconConfiguration.default

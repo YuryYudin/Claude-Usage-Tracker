@@ -93,6 +93,7 @@ class ProfileManager: ObservableObject {
             provider: provider,
             codexConfiguration: provider == .codex ? copySettingsFrom?.codexConfiguration : nil,
             zaiConfiguration: provider == .zai ? (copySettingsFrom?.zaiConfiguration ?? ZAIProfileConfiguration()) : ZAIProfileConfiguration(),
+            kimiConfiguration: provider == .kimi ? (copySettingsFrom?.kimiConfiguration ?? KimiProfileConfiguration()) : KimiProfileConfiguration(),
             hasCliAccount: false,
             iconConfig: iconConfig,
             refreshInterval: copySettingsFrom?.refreshInterval ?? 30.0,

@@ -35,6 +35,8 @@ struct Profile: Codable, Identifiable, Equatable {
     var zaiConfiguration: ZAIProfileConfiguration
     var zaiUsage: ZAIUsage?
     var zaiAPIKey: String?
+    var kimiAPIKey: String?
+    var kimiConfiguration: KimiProfileConfiguration
 
     // MARK: - CLI Account Sync Metadata
     var hasCliAccount: Bool
@@ -100,6 +102,8 @@ struct Profile: Codable, Identifiable, Equatable {
         zaiConfiguration: ZAIProfileConfiguration = ZAIProfileConfiguration(),
         zaiUsage: ZAIUsage? = nil,
         zaiAPIKey: String? = nil,
+        kimiAPIKey: String? = nil,
+        kimiConfiguration: KimiProfileConfiguration = KimiProfileConfiguration(),
         hasCliAccount: Bool = false,
         cliAccountSyncedAt: Date? = nil,
         customKeychainServiceName: String? = nil,
@@ -131,6 +135,8 @@ struct Profile: Codable, Identifiable, Equatable {
         self.zaiConfiguration = zaiConfiguration
         self.zaiUsage = zaiUsage
         self.zaiAPIKey = zaiAPIKey?.nilIfBlank
+        self.kimiAPIKey = kimiAPIKey?.nilIfBlank
+        self.kimiConfiguration = kimiConfiguration
         self.hasCliAccount = hasCliAccount
         self.cliAccountSyncedAt = cliAccountSyncedAt
         self.customKeychainServiceName = customKeychainServiceName
@@ -163,6 +169,7 @@ struct Profile: Codable, Identifiable, Equatable {
         case cliCredentialsJSON
         case codexCredentialsJSON, codexConfiguration, codexUsage
         case zaiConfiguration, zaiUsage, zaiAPIKey
+        case kimiAPIKey, kimiConfiguration
         case hasCliAccount, cliAccountSyncedAt
         case customKeychainServiceName
         case terminalLauncherSlug
@@ -196,6 +203,8 @@ struct Profile: Codable, Identifiable, Equatable {
         zaiConfiguration = try c.decodeIfPresent(ZAIProfileConfiguration.self, forKey: .zaiConfiguration) ?? ZAIProfileConfiguration()
         zaiUsage = try? c.decodeIfPresent(ZAIUsage.self, forKey: .zaiUsage)
         zaiAPIKey = try c.decodeIfPresent(String.self, forKey: .zaiAPIKey)
+        kimiAPIKey = try c.decodeIfPresent(String.self, forKey: .kimiAPIKey)?.nilIfBlank
+        kimiConfiguration = try c.decodeIfPresent(KimiProfileConfiguration.self, forKey: .kimiConfiguration) ?? KimiProfileConfiguration()
         hasCliAccount = try c.decodeIfPresent(Bool.self, forKey: .hasCliAccount) ?? false
         cliAccountSyncedAt = try c.decodeIfPresent(Date.self, forKey: .cliAccountSyncedAt)
         customKeychainServiceName = try c.decodeIfPresent(String.self, forKey: .customKeychainServiceName)
@@ -225,6 +234,7 @@ struct Profile: Codable, Identifiable, Equatable {
         try c.encodeIfPresent(codexConfiguration, forKey: .codexConfiguration)
         try c.encodeIfPresent(codexUsage, forKey: .codexUsage)
         try c.encode(zaiConfiguration, forKey: .zaiConfiguration)
+        if provider == .kimi { try c.encode(kimiConfiguration, forKey: .kimiConfiguration) }
         try c.encodeIfPresent(zaiUsage, forKey: .zaiUsage)
         // Credentials live in the Keychain (per-profile items), NOT in the plist.
         // The plist on disk is world-readable cleartext — see #267.
@@ -234,6 +244,7 @@ struct Profile: Codable, Identifiable, Equatable {
             try c.encodeIfPresent(cliCredentialsJSON, forKey: .cliCredentialsJSON)
             try c.encodeIfPresent(codexCredentialsJSON, forKey: .codexCredentialsJSON)
             try c.encodeIfPresent(zaiAPIKey, forKey: .zaiAPIKey)
+            try c.encodeIfPresent(kimiAPIKey, forKey: .kimiAPIKey)
         }
         try c.encodeIfPresent(organizationId, forKey: .organizationId)
         try c.encodeIfPresent(apiOrganizationId, forKey: .apiOrganizationId)
@@ -277,6 +288,8 @@ struct Profile: Codable, Identifiable, Equatable {
             return codexCredentialsJSON != nil || CodexAuthService.shared.authFileExists()
         case .zai:
             return zaiAPIKey != nil
+        case .kimi:
+            return kimiAPIKey?.nilIfBlank != nil
         case .unsupported:
             return false
         }
@@ -297,6 +310,8 @@ struct Profile: Codable, Identifiable, Equatable {
             return codexCredentialsJSON != nil || CodexAuthService.shared.authFileExists()
         case .zai:
             return zaiAPIKey != nil
+        case .kimi:
+            return kimiAPIKey?.nilIfBlank != nil
         case .unsupported:
             return false
         }

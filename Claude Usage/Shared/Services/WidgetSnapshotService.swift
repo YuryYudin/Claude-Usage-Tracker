@@ -81,6 +81,7 @@ final class WidgetSnapshotService {
             case .anthropic: provider = .claude
             case .codex: provider = .codex
             case .zai: provider = .zai
+            case .kimi: provider = .kimi
             case .unsupported: return nil
             }
             let primary = usage.primaryQuota
@@ -93,6 +94,9 @@ final class WidgetSnapshotService {
             let secondaryRole: UsageQuota.Role = primaryIsWeekly ? .session : .weekly
             let secondary = usage.quotaWindows?.first(where: {
                 $0.role == secondaryRole && (primary == nil || $0.bucketID == primary?.bucketID)
+            }) ?? usage.quotaWindows?.first(where: {
+                $0.role == .other && $0.widgetLabelKey != nil && $0.id != primary?.id
+                    && (primary == nil || $0.bucketID == primary?.bucketID)
             })
             let secondaryValue: Double? = secondary?.effectivePercentage(at: date)
                 ?? (usage.quotaWindows == nil && usage.weeklyAvailable != false && !primaryIsWeekly
@@ -104,8 +108,8 @@ final class WidgetSnapshotService {
                 sessionPercentage: primaryValue, sessionResetTime: reset,
                 weeklyPercentage: secondaryValue, weeklyResetTime: secondaryReset,
                 lastUpdated: usage.lastUpdated,
-                primaryLabel: primary?.role == .tools ? "widget.tools" : (primary?.role == .other ? "widget.quota" : (primaryIsWeekly ? "widget.weekly" : "widget.session")),
-                secondaryLabel: secondary?.role == .session ? "widget.session" : "widget.weekly")
+                primaryLabel: primary?.widgetLabelKey ?? (primary?.role == .tools ? "widget.tools" : (primary?.role == .other ? "widget.quota" : (primaryIsWeekly ? "widget.weekly" : "widget.session"))),
+                secondaryLabel: secondary?.widgetLabelKey ?? (secondary?.role == .session ? "widget.session" : "widget.weekly"))
         }
         if entries.count > WidgetSnapshot.maximumProfileCount {
             let active = entries.first(where: \.isActive)

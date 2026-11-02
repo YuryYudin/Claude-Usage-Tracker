@@ -20,6 +20,7 @@ struct WidgetSnapshot: Codable {
             case claude
             case codex
             case zai
+            case kimi
         }
 
         let id: UUID
@@ -78,7 +79,7 @@ struct WidgetSnapshot: Codable {
     /// Bump when the on-disk format changes so an old widget build can
     /// detect a snapshot written by a newer app (and vice versa).
     /// `load` rejects snapshots whose version doesn't match.
-    static let currentSchemaVersion = 4
+    static let currentSchemaVersion = 5
     static let maximumFileSize = 128 * 1024
     static let maximumProfileCount = 64
     static let maximumProfileNameLength = 64
