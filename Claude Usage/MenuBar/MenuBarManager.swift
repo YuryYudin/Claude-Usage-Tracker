@@ -182,7 +182,7 @@ class MenuBarManager: NSObject, ObservableObject {
                     }
                 )
             } else {
-                displayConfig = config
+                displayConfig = config.effective(for: profileManager.activeProfile?.claudeUsage ?? usage)
             }
 
             statusBarUIManager?.setup(target: self, action: #selector(togglePopover), config: displayConfig)
@@ -506,7 +506,7 @@ class MenuBarManager: NSObject, ObservableObject {
                 }
             )
         } else {
-            displayConfig = config
+            displayConfig = config.effective(for: profileManager.activeProfile?.claudeUsage ?? usage)
         }
 
         statusBarUIManager?.updateConfiguration(
@@ -1150,6 +1150,11 @@ class MenuBarManager: NSObject, ObservableObject {
             }
             if profileManager.activeProfile?.id == source.id {
                 usage = newUsage
+                // The session icon is shown or hidden by the plan's limits, so
+                // rebuild the status items when the session limit appears or goes away
+                if newUsage.hasSessionLimit != (previous?.hasSessionLimit ?? true) {
+                    updateMenuBarDisplay(with: current.iconConfig)
+                }
                 consecutiveRefreshFailures = 0
                 lastRefreshError = nil
                 hasCredentialError = false
@@ -1205,7 +1210,7 @@ class MenuBarManager: NSObject, ObservableObject {
                 }
             )
         } else {
-            displayConfig = config
+            displayConfig = config.effective(for: profileManager.activeProfile?.claudeUsage ?? usage)
         }
 
         statusBarUIManager?.setup(target: self, action: #selector(togglePopover), config: displayConfig)
