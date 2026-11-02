@@ -974,8 +974,8 @@
 "support.all_features_desc" = "Кожна функція цієї програми абсолютно безкоштовна. Жодних преміум-рівнів, жодних платних функцій, жодних підписок.";
 "support.open_source" = "Відкритий код";
 "support.open_source_desc" = "Вихідний код публічно доступний на GitHub. Ви можете переглядати, змінювати та робити внески до проекту.";
-"support.no_tracking" = "Без відстеження";
-"support.no_tracking_desc" = "Ваша конфіденційність важлива. Жодної аналітики, телеметрії, збору даних. Все залишається на вашому Mac.";
+"support.no_tracking" = "No automatic usage analytics";
+"support.no_tracking_desc" = "Usage history stays on this Mac. Feedback and mobile-app interest requests are sent only when you submit them.";
 
 /* Claude Code Notch HUD */
 "notch.hud.section_title" = "Dynamic Island";

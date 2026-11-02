@@ -824,8 +824,8 @@
 "support.all_features_desc" = "Bu uygulamadaki her özellik tamamen ücretsizdir. Premium katman yok, ücret duvarı yok, abonelik yok.";
 "support.open_source" = "Açık Kaynak";
 "support.open_source_desc" = "Kaynak kodu GitHub'da herkese açıktır. Projeyi inceleyebilir, değiştirebilir ve katkıda bulunabilirsiniz.";
-"support.no_tracking" = "Takip Yok";
-"support.no_tracking_desc" = "Gizliliğiniz önemli. Analitik yok, telemetri yok, veri toplama yok. Her şey Mac'inizde kalır.";
+"support.no_tracking" = "No automatic usage analytics";
+"support.no_tracking_desc" = "Usage history stays on this Mac. Feedback and mobile-app interest requests are sent only when you submit them.";
 "support.message" = "Bu uygulamayı faydalı buluyorsanız, geliştirmesini desteklemeyi düşünün";
 "support.buy_coffee" = "Bir Kahve Ismarla";
 "support.footer" = "Desteğiniz bu projenin yaşamasına ve büyümesine yardımcı olur";

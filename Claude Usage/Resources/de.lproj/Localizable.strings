@@ -812,8 +812,8 @@
 "support.all_features_desc" = "Jede Funktion in dieser App ist vollständig kostenlos. Keine Premium-Stufen, keine Bezahlschranken, keine Abonnements.";
 "support.open_source" = "Open Source";
 "support.open_source_desc" = "Der Quellcode ist öffentlich auf GitHub verfügbar. Sie können ihn einsehen, ändern und zum Projekt beitragen.";
-"support.no_tracking" = "Kein Tracking";
-"support.no_tracking_desc" = "Ihre Privatsphäre ist wichtig. Keine Analysen, keine Telemetrie, keine Datenerfassung. Alles bleibt auf Ihrem Mac.";
+"support.no_tracking" = "No automatic usage analytics";
+"support.no_tracking_desc" = "Usage history stays on this Mac. Feedback and mobile-app interest requests are sent only when you submit them.";
 "support.message" = "Wenn Sie diese App nützlich finden, erwägen Sie, ihre Entwicklung zu unterstützen";
 "support.buy_coffee" = "Mir einen Kaffee kaufen";
 "support.footer" = "Ihre Unterstützung hält dieses Projekt am Leben und wachsen";

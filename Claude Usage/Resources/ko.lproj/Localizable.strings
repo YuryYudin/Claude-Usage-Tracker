@@ -806,8 +806,8 @@
 "support.all_features_desc" = "이 앱의 모든 기능은 완전히 무료입니다. 프리미엄 계층, 유료 장벽, 구독이 없습니다.";
 "support.open_source" = "오픈 소스";
 "support.open_source_desc" = "소스 코드는 GitHub에서 공개적으로 사용 가능합니다. 검사하고, 수정하고, 프로젝트에 기여할 수 있습니다.";
-"support.no_tracking" = "추적 없음";
-"support.no_tracking_desc" = "귀하의 개인 정보는 중요합니다. 분석, 원격 측정, 데이터 수집이 없습니다. 모든 것이 Mac에 남아 있습니다.";
+"support.no_tracking" = "No automatic usage analytics";
+"support.no_tracking_desc" = "Usage history stays on this Mac. Feedback and mobile-app interest requests are sent only when you submit them.";
 "support.message" = "이 앱이 유용하다고 생각하시면 개발을 지원해 주세요";
 "support.buy_coffee" = "커피 사주기";
 "support.footer" = "귀하의 지원은 이 프로젝트를 계속 유지하고 성장시키는 데 도움이 됩니다";

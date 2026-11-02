@@ -824,8 +824,8 @@
 "support.all_features_desc" = "Mọi tính năng trong ứng dụng này đều hoàn toàn miễn phí. Không có gói cao cấp, không tường phí, không đăng ký trả phí.";
 "support.open_source" = "Mã nguồn mở";
 "support.open_source_desc" = "Mã nguồn được công khai trên GitHub. Bạn có thể kiểm tra, chỉnh sửa và đóng góp cho dự án.";
-"support.no_tracking" = "Không theo dõi";
-"support.no_tracking_desc" = "Quyền riêng tư của bạn rất quan trọng. Không phân tích, không đo từ xa, không thu thập dữ liệu. Mọi thứ đều nằm trên Mac của bạn.";
+"support.no_tracking" = "No automatic usage analytics";
+"support.no_tracking_desc" = "Usage history stays on this Mac. Feedback and mobile-app interest requests are sent only when you submit them.";
 "support.message" = "Nếu bạn thấy ứng dụng này hữu ích, hãy cân nhắc ủng hộ việc phát triển nó";
 "support.buy_coffee" = "Mời tôi một ly cà phê";
 "support.footer" = "Sự ủng hộ của bạn giúp dự án này tiếp tục tồn tại và phát triển";

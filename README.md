@@ -43,7 +43,7 @@ Claude Usage Tracker is a lightweight, native macOS menu bar application that pr
 - **Customizable Interface**: 5 icon styles + 3 color modes (Multi-Color/Greyscale/Single Color) + per-element statusline colors + remaining/used percentage toggle
 - **Smart Automation**: Auto-start sessions, auto-switch profiles, threshold notifications
 - **Developer Tools**: Terminal statusline integration with model, context, profile display, weekly/extra usage segments, pace markers, per-element colors, and color modes
-- **Privacy-First**: Credentials in the macOS Keychain, local storage, minimal anonymous analytics (version-only heartbeat), no cloud sync
+- **Privacy**: Local usage history, no automatic usage analytics, no cloud sync. Feedback and mobile-app interest requests are sent only when you submit them.
 - **Native Performance**: Lightweight Swift/SwiftUI design for macOS
 
 <div align="center">
@@ -428,7 +428,7 @@ Plain `claude` keeps following the **active** profile, exactly as before. Removi
 - **Advanced Error Handling**: Professional error system with user-friendly recovery
 - **Robust Validation**: Session key and API endpoint validation
 - Local storage with no cloud sync
-- Minimal anonymous analytics (version-only heartbeat every 24h — no PII, no credentials)
+- No automatic usage analytics. Optional feedback and mobile-app interest requests require a user action.
 - HTTPS-only communication with Claude API
 
 ### Advanced Capabilities
@@ -774,7 +774,7 @@ The app can simultaneously monitor both web (claude.ai) and API console usage, p
 - **Apple Code Signed**: Officially signed with Apple Developer certificate for verified authenticity
 - **Secure Updates**: Automatic updates delivered over HTTPS with code signature verification
 - **No Cloud Sync**: All data remains local to your machine
-- **Minimal Analytics**: Anonymous heartbeat every 24 hours containing only the app version — no PII, no credentials, no usage data
+- **No Automatic Usage Analytics**: The upstream daily heartbeat is removed in this fork. Optional feedback sends the name, role, email and message you enter; the mobile-app interest button sends an interest request to the developer's Cloudflare Worker.
 - **Advanced Error Handling**: Robust error system with user-friendly recovery
 - **Session Key Validation**: Comprehensive validation of API credentials
 - **Network**: HTTPS-only communication with claude.ai and Anthropic API

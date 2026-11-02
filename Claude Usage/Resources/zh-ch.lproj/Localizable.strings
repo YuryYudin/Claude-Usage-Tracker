@@ -818,8 +818,8 @@
 "support.all_features_desc" = "此应用中的每个功能都是完全免费的。没有高级层、没有付费墙、没有订阅。";
 "support.open_source" = "开源";
 "support.open_source_desc" = "源代码在GitHub上公开可用。您可以检查、修改并为项目做出贡献。";
-"support.no_tracking" = "无跟踪";
-"support.no_tracking_desc" = "您的隐私很重要。没有分析、没有遥测、没有数据收集。一切都保留在您的Mac上。";
+"support.no_tracking" = "No automatic usage analytics";
+"support.no_tracking_desc" = "Usage history stays on this Mac. Feedback and mobile-app interest requests are sent only when you submit them.";
 "support.message" = "如果您觉得这个应用有用，请考虑支持其开发";
 "support.buy_coffee" = "请我喝咖啡";
 "support.footer" = "您的支持有助于保持这个项目的活力和增长";

@@ -812,8 +812,8 @@
 "support.all_features_desc" = "このアプリのすべての機能は完全に無料です。プレミアム層、ペイウォール、サブスクリプションはありません。";
 "support.open_source" = "オープンソース";
 "support.open_source_desc" = "ソースコードはGitHubで公開されています。検査、変更、プロジェクトへの貢献が可能です。";
-"support.no_tracking" = "トラッキングなし";
-"support.no_tracking_desc" = "あなたのプライバシーは重要です。分析、テレメトリー、データ収集はありません。すべてMac上に留まります。";
+"support.no_tracking" = "No automatic usage analytics";
+"support.no_tracking_desc" = "Usage history stays on this Mac. Feedback and mobile-app interest requests are sent only when you submit them.";
 "support.message" = "このアプリが役立つと思われる場合は、開発を支援することをご検討ください";
 "support.buy_coffee" = "コーヒーを奢る";
 "support.footer" = "あなたのサポートがこのプロジェクトを生き生きと成長させ続けます";

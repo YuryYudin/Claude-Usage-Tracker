@@ -58,9 +58,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         // `menuBarManager` reference even if the wizard never visibly opens.
         menuBarManager = MenuBarManager()
 
-        // Start 24-hour heartbeat ping to track active app usage
-        HeartbeatService.shared.start()
-
         // Claude Code notch HUD (opt-in): start the hook listener + HUD when
         // enabled, and react to the settings toggle at runtime.
         updateNotchHUDServices()

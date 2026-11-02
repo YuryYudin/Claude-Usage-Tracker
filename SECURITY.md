@@ -63,9 +63,13 @@ We'll keep you informed throughout the process and credit you in the security ad
 ### Network Security
 
 - All communication uses **HTTPS only**
-- API requests are sent exclusively to `claude.ai` endpoints
-- No telemetry, analytics, or third-party tracking
-- Session authentication via secure cookies only
+- Usage and authentication requests go to the selected provider's endpoints.
+- The upstream automatic daily analytics heartbeat is removed in this fork.
+- Optional feedback submits the name, role, email and message entered by the user;
+  the mobile-app interest button submits an interest request to the developer's
+  Cloudflare Worker. These requests require a user action. About also fetches
+  contributor details and avatars from GitHub.
+- Authentication uses provider-specific cookies, OAuth credentials or API keys.
 
 ### Code Execution
 
