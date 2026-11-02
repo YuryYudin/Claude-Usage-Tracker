@@ -657,8 +657,8 @@ struct SmartUsageDashboard: View {
                     }
                 }
             } else {
-            // Primary: Session Usage
-            if usage.sessionAvailable != false {
+            // Primary: Session Usage (absent on plans without a 5-hour window, e.g. Ultra)
+            if usage.sessionAvailable != false && usage.hasSessionLimit {
             UsageRow(
                 title: "menubar.session_usage".localized,
                 subtitle: "menubar.5_hour_window".localized,
