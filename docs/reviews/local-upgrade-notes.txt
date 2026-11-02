@@ -1,8 +1,10 @@
-Claude Usage integration build — 2026-10-09
+Claude Usage integration build - 2026-11-02
 
 Includes upstream provider integration, retained Codex local/SSH support, GLM/z.ai,
-and the extra-large six-account overview widget. Source revision: a2b9762.
-Version 3.3.0, build 18. Automatic upstream updates are disabled for this candidate.
+and large/extra-large overview widgets for up to eight accounts. Source: a062be3.
+Version 3.3.0, build 21. Automatic upstream updates remain disabled.
+Retains the user-accepted build-20 desktop focus/appearance fix. Kimi Code
+support has been investigated; this build does not add a Kimi provider.
 
 THIS DMG IS A LOCAL BUILD
 
@@ -44,7 +46,7 @@ external changes block saving. Missing credential hydration cannot delete items.
 
 BEFORE REPLACING YOUR WORKING INSTALLATION
 
-1. Quit the working app and keep a copy of its app bundle outside /Applications.
+1. Quit the working app and preserve its app bundle as a ZIP backup.
    Avoid running the old and new builds together; they share preferences.
 2. Privately back up its preferences and the entire "Claude Usage" Application
    Support folder while it is stopped. Do not delete Keychain items or CLI files.
@@ -52,29 +54,36 @@ BEFORE REPLACING YOUR WORKING INSTALLATION
    this candidate preserves those sources. A certificate-signed build needs to
    be checked separately if credentials are known to exist only in Keychain.
 4. Replace the app only after preserving the old build and data. Open the
-   installed copy, check all six accounts, usage, history, settings and refresh.
+   installed copy at /Applications/Claude Usage.app, check all existing accounts,
+   usage, history, settings and refresh. Eject the DMG after copying.
    Check widgets from the installed extension and select Extra Large.
+   Build 20 and build 21 use the same profile format; no new migration is needed.
 
-BACKUP COMMANDS FOR THE OTHER MAC
+BACKUP COMMANDS
 
 Quit Claude Usage first. Run these in Terminal before copying the new app into
 Applications. They create a private backup, without printing credential values:
 
 umask 077
-backup_dir="$HOME/Desktop/Claude-Usage-backup-$(date +%Y%m%d-%H%M%S)"
-mkdir -m 700 "$backup_dir"
-ditto "/Applications/Claude Usage.app" "$backup_dir/Claude Usage.app"
+backup_dir="$HOME/Library/Application Support/Claude Usage Recovery/$(date +%Y%m%d-%H%M%S)-build21.noindex"
+mkdir -p -m 700 "$backup_dir"
+ditto -c -k --sequesterRsrc --keepParent "/Applications/Claude Usage.app" "$backup_dir/Claude Usage.app.zip"
 defaults export HamedElfayome.Claude-Usage "$backup_dir/preferences.plist"
 if [ -d "$HOME/Library/Application Support/Claude Usage" ]; then
     ditto "$HOME/Library/Application Support/Claude Usage" "$backup_dir/Application Support"
 fi
 
-Confirm the old app and preferences.plist exist in the backup folder before
+Confirm the ZIP backup and preferences.plist exist in the backup folder before
 replacing the installation. Keep this backup private; it can contain credentials.
+Keep old app backups compressed so they cannot become duplicate launch targets.
 
 ROLLBACK
 
-The old fork cannot decode the new "anthropic" provider value. Replacing only
+For rollback from build 21 to build 20, restore the archived app while keeping
+current preferences and credentials. Both use the integrated profile format.
+
+For rollback to a pre-integration legacy build, the old fork cannot decode the
+new "anthropic" provider value. Replacing only
 the app bundle is insufficient; its original metadata format must be restored.
 Do not blindly restore old OAuth token values: refresh may have rotated them.
 Preserve/reconcile the newest credentials by profile ID when restoring metadata.
@@ -85,7 +94,10 @@ VALIDATION AND LIMITS
 
 320 hosted tests: zero failures, two signing-dependent Keychain tests skipped.
 Actual old-fork codecs and synthetic migration/metadata rollback pass. Universal
-arm64/x86_64 app/widget Release build passes; six-account light/dark content
-renders were inspected. Your actual account data was not present in this build
-environment. Live account continuity and installed-widget behavior are not yet
-verified. These checks do not establish a guaranteed seamless production upgrade.
+arm64/x86_64 app/widget Release build passes on Xcode 16.4. Standalone previews
+covered 6, 7 and 8 accounts across four families, three rendering modes and
+light/dark (72 renders). Eight-account large/extra-large layouts were inspected.
+The production six-account installation and build-20 focus behavior were verified
+in October. Build 21 was packaged without replacing that installation. Its
+installed WidgetKit-host behavior and account continuity need verification after
+an upgrade. Production preferences and credentials are excluded from this DMG.
