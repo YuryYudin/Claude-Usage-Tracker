@@ -182,7 +182,7 @@ class MenuBarManager: NSObject, ObservableObject {
                     }
                 )
             } else {
-                displayConfig = config.effective(for: profileManager.activeProfile?.claudeUsage ?? usage)
+                displayConfig = configAdjustedForPlanLimits(config)
             }
 
             statusBarUIManager?.setup(target: self, action: #selector(togglePopover), config: displayConfig)
@@ -506,7 +506,7 @@ class MenuBarManager: NSObject, ObservableObject {
                 }
             )
         } else {
-            displayConfig = config.effective(for: profileManager.activeProfile?.claudeUsage ?? usage)
+            displayConfig = configAdjustedForPlanLimits(config)
         }
 
         statusBarUIManager?.updateConfiguration(
@@ -1001,6 +1001,12 @@ class MenuBarManager: NSObject, ObservableObject {
         return ProviderRegistry.service(for: profile.provider).hasCredentials(for: profile)
     }
 
+    /// The icon config to display for the active profile's last usage, so the
+    /// session icon is hidden on plans without a session limit (see `effective(for:)`).
+    private func configAdjustedForPlanLimits(_ config: MenuBarIconConfiguration) -> MenuBarIconConfiguration {
+        config.effective(for: profileManager.activeProfile?.claudeUsage ?? usage)
+    }
+
     private func setupMultiProfileMode() {
         let selectedProfiles = profileManager.getSelectedProfiles()
         let config = profileManager.multiProfileConfig
@@ -1210,7 +1216,7 @@ class MenuBarManager: NSObject, ObservableObject {
                 }
             )
         } else {
-            displayConfig = config.effective(for: profileManager.activeProfile?.claudeUsage ?? usage)
+            displayConfig = configAdjustedForPlanLimits(config)
         }
 
         statusBarUIManager?.setup(target: self, action: #selector(togglePopover), config: displayConfig)
