@@ -20,8 +20,8 @@ final class AnthropicUsageProvider: UsageProviderService {
     // are not part of APIServiceProtocol.
     private let apiService: ClaudeAPIService
 
-    init(apiService: ClaudeAPIService = ClaudeAPIService()) {
-        self.apiService = apiService
+    init(apiService: ClaudeAPIService? = nil) {
+        self.apiService = apiService ?? ClaudeAPIService()
     }
 
     /// Profile credentials plus the system-keychain CLI fallback that

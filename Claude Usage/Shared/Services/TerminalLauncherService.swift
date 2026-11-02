@@ -158,6 +158,7 @@ class TerminalLauncherService {
     /// When the launcher's keychain entry exists and the profile isn't pinned
     /// to it yet, pin it so usage tracking follows this login. Returns true if
     /// the profile was updated.
+    @MainActor
     func pinIfLoginDetected(_ profile: Profile) -> Bool {
         guard let slug = profile.terminalLauncherSlug else { return false }
         let expected = expectedKeychainService(forSlug: slug)

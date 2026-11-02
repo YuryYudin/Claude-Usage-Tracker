@@ -1009,6 +1009,7 @@ class ClaudeCodeSyncService {
     /// On a successful refresh, the new credentials are written back to BOTH the profile's
     /// cached JSON AND (when applicable) the custom keychain entry, so Claude Code and the
     /// Tracker stay in sync.
+    @MainActor
     func ensureFreshCredentials(for profileId: UUID, allowRotation: Bool = false) async -> String? {
         let profiles = ProfileStore.shared.loadProfiles()
         guard let profile = profiles.first(where: { $0.id == profileId }), profile.provider == .anthropic else {
@@ -1171,6 +1172,7 @@ class ClaudeCodeSyncService {
 
     /// Patch the current managed profile, preserving edits and avoiding a stale
     /// in-memory credential snapshot overwriting the just-rotated tokens later.
+    @MainActor
     private func persistProfileCredentialsJSON(profileId: UUID, json: String, expected: Profile) {
         if var current = ProfileManager.shared.profiles.first(where: { $0.id == profileId }) {
             guard CredentialRefreshGuard.canUpdateClaude(current, expected: expected, replacement: json),

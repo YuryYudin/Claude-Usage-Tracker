@@ -9,7 +9,9 @@ final class OAuthRefreshCoordinator<Value> {
 
     // Explicit destruction avoids Swift 6.3.3 inlining a synthesized isolated
     // generic deinitializer incorrectly in optimized builds. No cleanup uses actor state.
+    #if compiler(>=6.2)
     nonisolated deinit {}
+    #endif
 
     init(rotatedToken: @escaping (Value) -> String?) { self.rotatedToken = rotatedToken }
 

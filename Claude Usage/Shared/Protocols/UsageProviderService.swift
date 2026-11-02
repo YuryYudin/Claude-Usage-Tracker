@@ -10,6 +10,7 @@ import Foundation
 /// The fetch contract every usage provider implements. Resolved through
 /// `ProviderRegistry.service(for:)` — call sites never reference a concrete
 /// provider type, so new providers plug in without core-file changes.
+@MainActor
 protocol UsageProviderService {
     var provider: Provider { get }
 

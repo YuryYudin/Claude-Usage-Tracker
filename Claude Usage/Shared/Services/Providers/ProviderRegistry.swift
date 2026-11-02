@@ -80,6 +80,7 @@ enum ProviderRegistry {
 
     // MARK: - Services
 
+    @MainActor
     static func service(for provider: Provider) -> UsageProviderService {
         switch provider {
         case .anthropic:

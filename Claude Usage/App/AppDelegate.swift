@@ -2,6 +2,7 @@ import Cocoa
 import SwiftUI
 import UserNotifications
 
+@MainActor
 class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
     private var menuBarManager: MenuBarManager?
     private var setupWindow: NSWindow?

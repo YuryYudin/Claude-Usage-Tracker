@@ -22,13 +22,14 @@ final class UsageRefreshCoordinator {
 
     // MARK: - Initialization
 
+    @MainActor
     init(
-        apiService: APIServiceProtocol = ClaudeAPIService(),
+        apiService: APIServiceProtocol? = nil,
         statusService: ClaudeStatusService = ClaudeStatusService(),
         dataStore: StorageProvider = DataStore.shared,
         notificationService: NotificationServiceProtocol = NotificationManager.shared
     ) {
-        self.apiService = apiService
+        self.apiService = apiService ?? ClaudeAPIService()
         self.statusService = statusService
         self.dataStore = dataStore
         self.notificationService = notificationService
