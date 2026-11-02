@@ -1,8 +1,10 @@
 Claude Usage integration build - 2026-11-02
 
 Includes upstream provider integration, retained Codex local/SSH support, GLM/z.ai,
-and large/extra-large overview widgets for up to eight accounts. Source: 371bfd2.
-Version 3.3.0, build 23. Automatic upstream updates remain disabled.
+and large/extra-large overview widgets for up to eight accounts. Source: a15cf50.
+Version 3.3.0, build 24. Automatic upstream updates remain disabled.
+Removes the automatic daily analytics heartbeat. Optional feedback and mobile-app
+interest requests remain user-triggered.
 Retains the user-accepted build-20 desktop focus/appearance fix. Adds direct
 Kimi Code subscriptions with region selection, OpenCode import, and manual keys.
 Quota windows include 5-hour, weekly when available, monthly total and monthly
@@ -69,7 +71,7 @@ Quit Claude Usage first. Run these in Terminal before copying the new app into
 Applications. They create a private backup, without printing credential values:
 
 umask 077
-backup_dir="$HOME/Library/Application Support/Claude Usage Recovery/$(date +%Y%m%d-%H%M%S)-build23.noindex"
+backup_dir="$HOME/Library/Application Support/Claude Usage Recovery/$(date +%Y%m%d-%H%M%S)-build24.noindex"
 mkdir -p -m 700 "$backup_dir"
 ditto -c -k --sequesterRsrc --keepParent "/Applications/Claude Usage.app" "$backup_dir/Claude Usage.app.zip"
 defaults export HamedElfayome.Claude-Usage "$backup_dir/preferences.plist"
@@ -83,7 +85,7 @@ Keep old app backups compressed so they cannot become duplicate launch targets.
 
 ROLLBACK
 
-For rollback from build 23 to build 20, restore the archived app while keeping
+For rollback from build 24 to build 20, restore the archived app while keeping
 current preferences and credentials. The six existing providers use the same
 profile format. The older app retains a Kimi record as an unsupported provider;
 it cannot display or refresh it. Never run a pre-integration legacy app on the
