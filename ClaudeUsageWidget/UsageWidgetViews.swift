@@ -277,7 +277,7 @@ struct UsageOverviewWidgetView: View {
 
     private var profiles: [WidgetSnapshot.ProfileEntry] {
         let selected = (entry.snapshot?.profiles ?? []).filter(\.isDisplayed)
-        return Array(selected.prefix(family == .systemMedium ? 4 : 6))
+        return Array(selected.prefix(family == .systemMedium ? 4 : 8))
     }
 
     var body: some View {
@@ -294,7 +294,7 @@ struct UsageOverviewWidgetView: View {
                 } else if family == .systemLarge && profiles.count <= 3 {
                     largeLayout(palette)
                 } else {
-                    // Four to six detailed cards exceed a large widget's height.
+                    // Four to eight detailed cards exceed a large widget's height.
                     // Keep every account visible by aligning compact quota columns.
                     mediumLayout(palette)
                 }
@@ -325,17 +325,17 @@ struct UsageOverviewWidgetView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    /// Extra-large: two equal columns and up to three rows. This gives six
+    /// Extra-large: two equal columns and up to four rows. This gives eight
     /// accounts room for names, both quota bars, resets, and stale indicators.
     private func extraLargeLayout(_ palette: Palette) -> some View {
-        VStack(spacing: 8) {
+        VStack(spacing: profiles.count > 6 ? 6 : 8) {
             ForEach(0..<((profiles.count + 1) / 2), id: \.self) { row in
                 if row > 0 {
                     Rectangle().fill(palette.separator).frame(height: 1)
                 }
                 HStack(alignment: .top, spacing: 18) {
                     ForEach(Array(profiles.dropFirst(row * 2).prefix(2))) { profile in
-                        detailedProfile(profile, palette: palette)
+                        detailedProfile(profile, palette: palette, compact: profiles.count > 6)
                             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                     }
                     if row * 2 + 1 == profiles.count {
@@ -348,11 +348,11 @@ struct UsageOverviewWidgetView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private func detailedProfile(_ profile: WidgetSnapshot.ProfileEntry, palette: Palette) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+    private func detailedProfile(_ profile: WidgetSnapshot.ProfileEntry, palette: Palette, compact: Bool = false) -> some View {
+        VStack(alignment: .leading, spacing: compact ? 4 : 6) {
             HStack(spacing: 4) {
                 Text(profile.name)
-                    .font(.subheadline.bold())
+                    .font(compact ? .caption.bold() : .subheadline.bold())
                     .lineLimit(1)
                     .foregroundStyle(palette.primary)
                 if profile.isActive {
@@ -372,7 +372,7 @@ struct UsageOverviewWidgetView: View {
                     resetTime: profile.sessionResetTime,
                     now: entry.date,
                     palette: palette,
-                    compact: false
+                    compact: compact
                 )
                 if let weeklyPercentage = profile.weeklyPercentage {
                     UsageBar(
@@ -381,7 +381,7 @@ struct UsageOverviewWidgetView: View {
                         resetTime: profile.weeklyResetTime,
                         now: entry.date,
                         palette: palette,
-                        compact: false
+                        compact: compact
                     )
                 }
             }
@@ -392,7 +392,7 @@ struct UsageOverviewWidgetView: View {
     /// Medium and dense large: one compact line per profile, name in a fixed column so the
     /// bars align across rows. Rows share the vertical space equally.
     private func mediumLayout(_ palette: Palette) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: profiles.count > 6 ? 2 : 4) {
             ForEach(profiles) { profile in
                 HStack(alignment: .top, spacing: 10) {
                     VStack(alignment: .leading, spacing: 1) {
