@@ -154,6 +154,18 @@ final class KimiProviderTests: XCTestCase {
         XCTAssertEqual(row.primaryLabel, "widget.session")
         XCTAssertEqual(row.secondaryLabel, "widget.monthly")
         XCTAssertEqual(try JSONDecoder().decode(WidgetSnapshot.self, from: JSONEncoder().encode(snapshot!)).profiles.first?.provider, .kimi)
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let file = directory.appendingPathComponent("snapshot.json")
+        try snapshot!.write(to: file)
+        let loaded = try XCTUnwrap(WidgetSnapshot.load(from: file))
+        XCTAssertEqual(loaded.profiles.first?.secondaryLabel, "widget.monthly")
+        var selected = profile
+        selected.claudeUsage?.selectedQuotaID = "limit_month_code"
+        service.publish(profiles: [selected], activeProfileId: selected.id)
+        try snapshot!.write(to: file)
+        XCTAssertEqual(WidgetSnapshot.load(from: file)?.profiles.first?.primaryLabel, "widget.monthly_code")
     }
 
     func testChangedCredentialRejectsInflightRefresh() async {

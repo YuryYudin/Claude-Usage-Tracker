@@ -189,7 +189,8 @@ struct WidgetSnapshot: Codable {
                 return false
             }
 
-            let labels: Set<String> = ["widget.session", "widget.weekly", "widget.tools", "widget.quota"]
+            let labels: Set<String> = ["widget.session", "widget.weekly", "widget.tools", "widget.quota",
+                                       "widget.monthly", "widget.monthly_code"]
             guard [profile.primaryLabel, profile.secondaryLabel].compactMap({ $0 }).allSatisfy(labels.contains) else { return false }
             if let percentage = profile.weeklyPercentage,
                !percentage.isFinite || !(0...10_000).contains(percentage) {
