@@ -1329,6 +1329,11 @@ class MenuBarManager: NSObject, ObservableObject {
         previousUsage: ClaudeUsage?,
         newUsage: ClaudeUsage
     ) {
+        guard newUsage.hasSessionLimit else {
+            lastKnownSessionResetTime.removeValue(forKey: profileId)
+            return
+        }
+
         if let quotas = newUsage.quotaWindows,
            !quotas.contains(where: { $0.role == .session && $0.resetTime != nil }) { return }
         let lastKnown = lastKnownSessionResetTime[profileId]

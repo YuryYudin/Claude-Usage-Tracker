@@ -181,6 +181,8 @@ class UsageHistoryService {
             return
         }
 
+        guard usage.hasSessionLimit else { return }
+
         // Only record if there was actual usage
         guard usage.sessionTokensUsed > 0 || usage.sessionPercentage > 0 else {
             LoggingService.shared.logInfo("recordSessionReset: Skipping snapshot - no usage to record")
@@ -234,7 +236,7 @@ class UsageHistoryService {
 
     /// Records session usage periodically (every 10 minutes)
     func recordSessionPeriodic(for profileId: UUID, usage: ClaudeUsage, provider: Provider = .anthropic) {
-        guard usage.sessionAvailable != false else { return }
+        guard usage.sessionAvailable != false, usage.hasSessionLimit else { return }
         let now = Date()
 
         // Check if enough time has passed since last recording (using persisted timestamp)
