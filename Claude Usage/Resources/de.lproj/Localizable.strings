@@ -946,6 +946,7 @@
 
 // MARK: - Overage Balance
 "popover.overage_balance" = "Guthaben";
+"popover.no_limits_reported" = "Dieser Plan meldet keine Nutzungslimits, daher gibt es hier nichts anzuzeigen.";
 
 // MARK: - Setup Wizard CLI Detection
 "setup.cli_detecting" = "CLI-Anmeldedaten werden gesucht...";

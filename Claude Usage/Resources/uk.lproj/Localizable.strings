@@ -912,6 +912,7 @@
 "popover.time_format_24h" = "24-годинний";
 "popover.time_format_system" = "Системний";
 "popover.overage_balance" = "Баланс";
+"popover.no_limits_reported" = "Цей план не повідомляє лімітів використання, тому тут нічого відстежувати.";
 "popover.banner.credentials_expired" = "Облікові дані застаріли. Оновіть у Налаштуваннях.";
 "popover.banner.refresh_failed" = "Оновлення не вдалося %d разів";
 "popover.banner.updated_ago" = "Оновлено %dхв тому";
