@@ -1081,11 +1081,6 @@
 "launcher.install_failed" = "Không thể cài trình khởi chạy: %@";
 
 // MARK: - Terminal Launcher / Support
-"support.popup_title" = "Chào, mình là Hamed 👋";
-"support.popup_signature" = "đội một người đứng sau Claude Usage";
-"support.popup_body" = "Miễn phí, mã nguồn mở, do một người xây dựng — không quảng cáo, không theo dõi. Nếu nó từng giúp bạn khỏi lãng phí giới hạn phiên, một ly cà phê sẽ giúp nó tiếp tục.";
-"support.popup_days" = "Đồng hành cùng giới hạn của bạn %d ngày — luôn miễn phí";
-"support.popup_later" = "Để sau";
 
 // Additional provider connections and quotas
 

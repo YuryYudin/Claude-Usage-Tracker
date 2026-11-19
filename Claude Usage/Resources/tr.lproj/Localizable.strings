@@ -1079,11 +1079,6 @@
 "launcher.verify" = "Oturumu Kontrol Et";
 "launcher.path_warning" = "~/.local/bin PATH içinde değil. Bu satırı kabuk profilinize ekleyin:";
 "launcher.install_failed" = "Başlatıcı yüklenemedi: %@";
-"support.popup_title" = "Merhaba, ben Hamed 👋";
-"support.popup_later" = "Belki sonra";
-"support.popup_signature" = "Claude Usage'ın arkasındaki tek kişilik ekip";
-"support.popup_body" = "Ücretsiz, açık kaynak, tek kişi tarafından yapıldı — reklam yok, izleme yok. Sizi bir oturum limitini yakmaktan kurtardıysa, bir kahve onu ayakta tutar.";
-"support.popup_days" = "%d gündür limitlerinizi izliyor — her zaman ücretsiz";
 
 // Additional provider connections and quotas
 

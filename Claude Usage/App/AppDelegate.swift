@@ -37,9 +37,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         // Initialize update manager to enable automatic update checks
         _ = UpdateManager.shared
 
-        // Monthly support reminder (first check is delayed past startup)
-        SupportReminderService.shared.start()
-
         // Request notification permissions
         requestNotificationPermissions()
 

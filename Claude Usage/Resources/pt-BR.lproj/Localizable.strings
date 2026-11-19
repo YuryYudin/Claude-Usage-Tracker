@@ -1075,11 +1075,6 @@
 "launcher.verify" = "Verificar login";
 "launcher.path_warning" = "~/.local/bin não está no seu PATH. Adicione esta linha ao perfil do shell:";
 "launcher.install_failed" = "Não foi possível instalar o atalho: %@";
-"support.popup_title" = "Oi, eu sou o Hamed 👋";
-"support.popup_later" = "Talvez depois";
-"support.popup_signature" = "o time de uma pessoa só por trás do Claude Usage";
-"support.popup_body" = "Grátis, open source, feito por uma pessoa só — sem anúncios nem rastreamento. Se já salvou você de queimar um limite de sessão, um café o mantém vivo.";
-"support.popup_days" = "De olho nos seus limites há %d dias — sempre grátis";
 
 // Additional provider connections and quotas
 

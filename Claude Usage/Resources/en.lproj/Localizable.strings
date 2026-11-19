@@ -1079,11 +1079,6 @@
 "launcher.verify" = "Check Login";
 "launcher.path_warning" = "~/.local/bin is not on your PATH. Add this line to your shell profile:";
 "launcher.install_failed" = "Couldn't install the launcher: %@";
-"support.popup_title" = "Hi, I'm Hamed 👋";
-"support.popup_later" = "Maybe later";
-"support.popup_signature" = "the one-person team behind Claude Usage";
-"support.popup_body" = "Free, open source, built by one person — no ads, no tracking. If it has ever saved you from burning a session limit, a coffee keeps it going.";
-"support.popup_days" = "Watching your limits for %d days — always free";
 
 // Additional provider connections and quotas
 
