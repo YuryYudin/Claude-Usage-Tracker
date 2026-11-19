@@ -2,6 +2,7 @@ import XCTest
 @testable import Claude_Usage
 
 /// Picking the organization after sign-in (#266).
+@MainActor
 final class PreferredOrganizationTests: XCTestCase {
     private typealias Org = ClaudeAPIService.AccountInfo
 

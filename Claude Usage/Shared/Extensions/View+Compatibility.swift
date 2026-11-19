@@ -62,3 +62,37 @@ extension View {
         }
     }
 }
+
+/// `ContentUnavailableView` on macOS 14+, and a plain centered icon, title and
+/// description on macOS 13.
+struct ContentUnavailableCompat: View {
+    let title: String
+    let systemImage: String
+    let description: String
+
+    init(_ title: String, systemImage: String, description: String) {
+        self.title = title
+        self.systemImage = systemImage
+        self.description = description
+    }
+
+    var body: some View {
+        if #available(macOS 14.0, *) {
+            ContentUnavailableView(title, systemImage: systemImage, description: Text(description))
+        } else {
+            VStack(spacing: 8) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 32))
+                    .foregroundColor(.secondary)
+                Text(title)
+                    .font(.headline)
+                Text(description)
+                    .font(.callout)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+}

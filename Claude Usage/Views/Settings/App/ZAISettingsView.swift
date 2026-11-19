@@ -12,10 +12,10 @@ struct ZAISettingsView: View {
         if let profile = profileManager.activeProfile, profile.provider == .zai {
             ZAIProfileSettingsContent(profileID: profile.id)
         } else {
-            ContentUnavailableView(
+            ContentUnavailableCompat(
                 "Select a Z.ai profile",
                 systemImage: Provider.zai.descriptor.logoSystemSymbolFallback,
-                description: Text("Create or select a Z.ai GLM profile under Manage Profiles.")
+                description: "Create or select a Z.ai GLM profile under Manage Profiles."
             )
         }
     }
@@ -74,7 +74,7 @@ private struct ZAIProfileSettingsContent: View {
             .padding()
         }
         .onAppear(perform: load)
-        .onChange(of: profileID) { _, _ in load() }
+        .onChangeCompat(of: profileID) { _ in load() }
         .onDisappear {
             persistConfiguration()
         }

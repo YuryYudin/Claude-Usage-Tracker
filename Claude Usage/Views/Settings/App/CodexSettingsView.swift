@@ -11,10 +11,10 @@ struct CodexSettingsView: View {
         if let profile = profileManager.activeProfile, profile.provider == .codex {
             CodexProfileSettingsContent(profileID: profile.id)
         } else {
-            ContentUnavailableView(
+            ContentUnavailableCompat(
                 "Select a Codex profile",
                 systemImage: Provider.codex.descriptor.logoSystemSymbolFallback,
-                description: Text("Create or select an OpenAI Codex profile under Manage Profiles.")
+                description: "Create or select an OpenAI Codex profile under Manage Profiles."
             )
         }
     }
@@ -78,14 +78,14 @@ private struct CodexProfileSettingsContent: View {
             .padding()
         }
         .onAppear(perform: load)
-        .onChange(of: profileID) { _, _ in load() }
-        .onChange(of: executablePath) { _, value in
+        .onChangeCompat(of: profileID) { _ in load() }
+        .onChangeCompat(of: executablePath) { value in
             configuration.executablePath = value.nilIfBlank
         }
-        .onChange(of: codexHome) { _, value in
+        .onChangeCompat(of: codexHome) { value in
             configuration.codexHome = value.nilIfBlank
         }
-        .onChange(of: sshHost) { _, value in
+        .onChangeCompat(of: sshHost) { value in
             // Keep validation current while the user types. Persistence still
             // happens on submit, refresh/recheck, or when leaving the view.
             configuration.sshHost = value.nilIfBlank

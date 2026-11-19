@@ -1,6 +1,7 @@
 import XCTest
 @testable import Claude_Usage
 
+@MainActor
 final class ClaudeAPIServiceParsingTests: XCTestCase {
     private let service = ClaudeAPIService()
 

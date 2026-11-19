@@ -37,7 +37,7 @@ final class NotchHookInstallerTests: XCTestCase {
                 for hook in (group["hooks"] as? [[String: Any]]) ?? [] {
                     if let url = hook["url"] as? String, url.contains(String(Constants.NotchHUD.port)) {
                         urls.append(url)
-                    } else if let command = hook["command"] as? String, command.contains("19847") {
+                    } else if let command = hook["command"] as? String, command.contains(String(Constants.NotchHUD.port)) {
                         urls.append(command)
                     }
                 }
@@ -80,7 +80,7 @@ final class NotchHookInstallerTests: XCTestCase {
         var hooks = settings["hooks"] as! [String: Any]
         hooks["SessionStart"] = [["matcher": "", "hooks": [[
             "type": "http",
-            "url": "http://127.0.0.1:19847/hook/testtoken/session-start",
+            "url": "http://127.0.0.1:\(Constants.NotchHUD.port)/hook/testtoken/session-start",
             "timeout": 3,
         ]]]]
         settings["hooks"] = hooks

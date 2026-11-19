@@ -3,6 +3,7 @@ import XCTest
 
 /// The installed statusline script is rewritten only when it changed, and a
 /// hand-edited copy is recognised so it can be backed up first (#321).
+@MainActor
 final class StatuslineScriptProtectionTests: XCTestCase {
 
     func testIdenticalScriptIsNotRewritten() {
